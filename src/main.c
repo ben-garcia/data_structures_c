@@ -29,16 +29,16 @@ int main(void) {
 
   // string builder
   string_builder *sb;
+  string_view str_view = {.data = " and Hello", .length = 10};
   char *buffer;
   string_builder_create(&sb);
-  string_builder_append(sb, "Hello World!", 12);
-  string_builder_append_formatted_string(sb, "%s - %s", "string builder",
-                                         "building...");
+  string_builder_append(sb, "Hello World!");
+  string_builder_append_view(sb, str_view);
+  string_builder_append_fmt_str(sb, "%s", " C!");
   string_builder_build(sb, &buffer);
 
   // string view
-  string_view view = {.data = buffer, .length = 10};
-  // string_view view = string_view_create(buffer);
+  string_view view = {.data = buffer, .length = 11};
   string_view view2 = {.data = "Testing", .length = 4};
   char *view_buffer;
   char *view2_buffer;

@@ -1,6 +1,8 @@
 #ifndef STRING_BUILDER_H
 #define STRING_BUILDER_H
 
+#include "string_view.h"
+
 /*
  * @brief Dynamic string implemented using dynamic array.
  *
@@ -17,18 +19,16 @@ typedef struct string_builder string_builder;
 int string_builder_create(string_builder **sb);
 
 /**
- * Add a string to the string builder.
+ * @brief Append a string to the string builder.
  *
  * @param sb string_builder to modify.
  * @param str string to add.
- * @param length Number of characters in the str.
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append(string_builder *sb, const char *str,
-                          unsigned int legnth);
+int string_builder_append(string_builder *sb, const char *str);
 
 /**
- * @brief Add a character to the string builder.
+ * @brief Append a character to the string builder.
  *
  * @param sb string_builder to modify.
  * @param ch character to add.
@@ -37,14 +37,24 @@ int string_builder_append(string_builder *sb, const char *str,
 int string_builder_append_char(string_builder *sb, const char ch);
 
 /**
- * @brief Add a formatted string to the string builder.
+ * @brief Append a formatted string to the string builder.
  *
  * @param sb string_builder to modify.
  * @param format formatted string.
  * @param ... variable number of arguments.
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append_formatted_string(string_builder *sb, const char *format, ...);
+int string_builder_append_fmt_str(string_builder *sb,
+                                           const char *format, ...);
+
+/**
+ * @brief Append a string view to the string builder
+ *
+ * @param sb string_builder to modify.
+ * @param view string_view to add
+ * @return 0 on success, 1 otherwise
+ */
+int string_builder_append_view(string_builder *sb, string_view view);
 
 /**
  * @brief Build string.
@@ -71,4 +81,4 @@ int string_builder_is_empty(string_builder *sb);
  */
 int string_builder_destroy(string_builder **sb);
 
-#endif  // STRING_BUILDER_H
+#endif // STRING_BUILDER_H

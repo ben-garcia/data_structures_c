@@ -18,17 +18,15 @@ int string_builder_create(string_builder **sb) {
   return dynamic_array_create(&(*sb)->string, sizeof(char), NULL, NULL);
 }
 
-int string_builder_append(string_builder *sb, const char *str,
-                          unsigned int length) {
-  return dynamic_array_add_many(sb->string, (void **)str, length);
+int string_builder_append(string_builder *sb, const char *str) {
+  return dynamic_array_add_many(sb->string, (void **)str, strlen(str));
 }
 
 int string_builder_append_char(string_builder *sb, const char ch) {
   return dynamic_array_add(sb->string, &ch);
 }
 
-int string_builder_append_formatted_string(string_builder *sb,
-                                           const char *format, ...) {
+int string_builder_append_fmt_str(string_builder *sb, const char *format, ...) {
   int result = 0;
   // number of characters the formatted string will contain
   // excluding the null byte.
@@ -54,7 +52,7 @@ int string_builder_append_formatted_string(string_builder *sb,
   num_chars = vsnprintf(buffer, size, format, args);
   va_end(args);
 
-  if ((string_builder_append(sb, buffer, num_chars)) != 0) {
+  if ((string_builder_append(sb, buffer)) != 0) {
     result = 1;
     goto exit;
   }
@@ -64,6 +62,14 @@ exit:
     free(buffer);
   }
   return result;
+}
+
+int string_builder_append_view(string_builder *sb, string_view view) {
+  if (sb == NULL || view.data == NULL || view.length == 0) {
+    return 1;
+  }
+
+  return dynamic_array_add_many(sb->string, (void**)view.data, view.length);
 }
 
 int string_builder_build(string_builder *sb, char **buffer) {
