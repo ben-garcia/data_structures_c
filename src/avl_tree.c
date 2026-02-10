@@ -382,33 +382,3 @@ int avl_tree_destroy(avl_tree **tree) {
 
   return 0;
 }
-
-/**
- * Print the formatted tree
- *
- * @param root the root of the AVL tree
- * @param space formatted spaces
- */
-void print_tree(avl_tree_node *root, unsigned int space) {
-  if (root == NULL) {
-    return;
-  }
-
-  // Increase distance between levels
-  space += 5;
-
-  // Process right child first
-  print_tree(root->right, space);
-
-  // Print current node
-  printf("\n");
-  for (unsigned int i = 5; i < space; i++) {
-    printf(" ");
-  }
-  printf("%ld\n", (long)root->data);
-
-  // Process left child
-  print_tree(root->left, space);
-}
-
-void avl_tree_print(avl_tree *tree) { print_tree(tree->root, 0); }

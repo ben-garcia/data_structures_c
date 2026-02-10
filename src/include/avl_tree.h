@@ -50,8 +50,6 @@ int avl_tree_delete(avl_tree *tree, void *data);
 */
 unsigned int avl_tree_get_size(avl_tree *tree);
 
-void avl_tree_print(avl_tree *tree);
-
 /**
  * @brief Deallocate the resources
  *
