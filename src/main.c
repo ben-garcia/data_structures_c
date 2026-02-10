@@ -111,6 +111,7 @@ int main(void) {
   printf("\n\n");
 
   // AVL tree
+  printf("=============avl tree==============\n");
   long tree_data[9] = {2, 1, 7, 4, 5, 5, 3, 8, 15};
   avl_tree *tree;
 
@@ -122,14 +123,10 @@ int main(void) {
 
   avl_tree_search(tree, (void *)tree_data[8]); // 5
 
-  printf("===========avl tree==============\n");
-  avl_tree_print(tree);
 
   avl_tree_delete(tree, (void *)tree_data[8]); // 15
   avl_tree_delete(tree, (void *)tree_data[0]); // 2
 
-  printf("after deleting 15 and 2\n");
-  avl_tree_print(tree);
 
   // de-allocate
   dynamic_array_destroy(&numbers);
