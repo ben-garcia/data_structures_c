@@ -66,7 +66,7 @@ int main(void) {
 
   // linked list
   linked_list *floats;
-  linked_list_create(&floats, sizeof(float), free_function, NULL);
+  linked_list_create(&floats, free_function, NULL);
   for (float f = 0.314; f < 10; f += 0.314) {
     float *f_ptr = malloc(sizeof(float));
     *f_ptr = f;

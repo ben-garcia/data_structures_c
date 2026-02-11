@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DYNAMIC_ARRAY_INITIAL_CAPACITY 8
-
 struct dynamic_array {
   void **items;
   void (*freefn)(void **);
@@ -52,7 +50,7 @@ int dynamic_array_create(dynamic_array **array, unsigned int data_size,
     return 1;
   }
 
-  (*array)->capacity = DYNAMIC_ARRAY_INITIAL_CAPACITY;
+  (*array)->capacity = 16; // initial capacity
   (*array)->data_size = data_size;
   (*array)->freefn = freefn;
   (*array)->matchfn = matchfn;

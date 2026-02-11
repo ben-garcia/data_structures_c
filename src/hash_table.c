@@ -4,7 +4,6 @@
 #include <string.h>
 
 #define HASH_TABLE_LOAD_FACTOR 0.75
-#define HASH_TABLE_INITIAL_SIZE 8
 
 struct hash_table_entry {
   char *key;
@@ -12,12 +11,12 @@ struct hash_table_entry {
 };
 
 struct hash_table {
-  hash_table_entry *entries;
-  unsigned size;
-  unsigned capacity;
-  unsigned data_size;
-  unsigned int (*hashfn)(const char *, unsigned int);
-  void (*freefn)(void **);
+  hash_table_entry *entries; // array of entries
+  unsigned int (*hashfn)(const char *, unsigned int); // function to generate hash code
+  void (*freefn)(void **); // function to deallocate each entry
+  unsigned size; // number of entries
+  unsigned capacity; // number of buckets
+  unsigned data_size; // sizeo of each item in the buckets
 };
 
 struct hash_table_iter {
@@ -29,17 +28,20 @@ struct hash_table_iter {
 
 /**
  * FNV-1A hashing function.
+ *
+ * source:
+ * https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function`
  */
 static unsigned int hash(const char *key, unsigned int length) {
-  unsigned int hash_value = 2166136261U;
+  unsigned int hash_code = 2166136261U;
 
   for (unsigned int i = 0; i < length; i++) {
-    // for FNV-1 which the order
-    hash_value ^= (unsigned char)key[i];
-    hash_value *= 16777619;
+    // for FNV-1 switch the order below
+    hash_code ^= (unsigned char)key[i];
+    hash_code *= 16777619;
   }
 
-  return hash_value;
+  return hash_code;
 }
 
 /**
@@ -128,7 +130,7 @@ int hash_table_create(hash_table **ht, unsigned int data_size,
 
   (*ht)->data_size = data_size;
   (*ht)->size = 0;
-  (*ht)->capacity = HASH_TABLE_INITIAL_SIZE;
+  (*ht)->capacity = 16; // initial capacity
   (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
   (*ht)->freefn = freefn;
   (*ht)->entries = NULL;
