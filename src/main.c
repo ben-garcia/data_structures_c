@@ -2,6 +2,8 @@
 #include "include/dynamic_array.h"
 #include "include/hash_table.h"
 #include "include/linked_list.h"
+#include "include/queue.h"
+#include "include/stack.h"
 #include "include/string_builder.h"
 #include "include/string_view.h"
 
@@ -118,15 +120,54 @@ int main(void) {
   avl_tree_create(&tree, comparefn);
 
   for (long i = 0; i < 8; i++) {
+    printf("inseting %ld\n", tree_data[i]);
     avl_tree_insert(tree, (void *)tree_data[i]);
   }
 
   avl_tree_search(tree, (void *)tree_data[8]); // 5
 
-
+  printf("\ndeleting %ld\n", tree_data[8]);
   avl_tree_delete(tree, (void *)tree_data[8]); // 15
+  printf("deleting %ld\n\n", tree_data[0]);
   avl_tree_delete(tree, (void *)tree_data[0]); // 2
 
+  printf("=============stack====================\n");
+  char *stack_data[] = {"s", "t", "a", "c", "k"};
+  stack *my_stack;
+
+  stack_create(&my_stack);
+
+  for (int i = 0; i < 5; i++) {
+    printf("pushing %s\n", stack_data[i]);
+    stack_push(my_stack, stack_data[i]);
+  }
+
+  printf("\n");
+
+  while (stack_is_empty(my_stack) != 0) {
+    printf("poping %s\n", (char *)stack_pop(my_stack));
+  }
+
+  printf("\n");
+
+  printf("=============queue====================\n");
+  char *queue_data[] = {"q", "u", "e", "u", "e"};
+  queue *my_queue;
+
+  queue_create(&my_queue);
+
+  for (int i = 0; i < 5; i++) {
+    printf("enqueing %s\n", queue_data[i]);
+    queue_enqueue(my_queue, queue_data[i]);
+  }
+
+  printf("\n");
+
+  while (queue_is_empty(my_queue) != 0) {
+    printf("dequeing %s\n", (char *)queue_dequeue(my_queue));
+  }
+
+  printf("\n");
 
   // de-allocate
   dynamic_array_destroy(&numbers);
@@ -142,6 +183,8 @@ int main(void) {
   free(buffer);
   free(view_buffer);
   free(view2_buffer);
+  stack_destroy(&my_stack);
+  queue_destroy(&my_queue);
 
   return 0;
 }
