@@ -15,14 +15,12 @@ struct linked_list_iter {
 
 struct linked_list {
   linked_list_node *head;
-  size_t data_size;
   void (*freefn)(void **);
   int (*matchfn)(void *, void *);
   unsigned int length;
 };
 
-int linked_list_create(linked_list **list, unsigned int data_size,
-                       void (*freefn)(void **),
+int linked_list_create(linked_list **list, void (*freefn)(void **),
                        int (*matchfn)(void *, void *)) {
   if ((*list = malloc(sizeof(linked_list))) == NULL) {
     return 1;
@@ -30,7 +28,6 @@ int linked_list_create(linked_list **list, unsigned int data_size,
 
   (*list)->freefn = freefn;
   (*list)->matchfn = matchfn;
-  (*list)->data_size = data_size;
   (*list)->head = NULL;
   (*list)->length = 0;
 

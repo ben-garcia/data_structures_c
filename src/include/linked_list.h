@@ -4,8 +4,8 @@
 typedef struct linked_list linked_list;
 typedef struct linked_list_iter linked_list_iter;
 
-int linked_list_create(linked_list **list, unsigned int data_size,
-                       void (*freefn)(void **), int (*matchfn)(void *, void *));
+int linked_list_create(linked_list **list, void (*freefn)(void **),
+                       int (*matchfn)(void *, void *));
 int linked_list_add(linked_list *list, void *data);
 int linked_list_find(linked_list *list, void *data, void **result);
 int linked_list_remove(linked_list *list, void *data);
