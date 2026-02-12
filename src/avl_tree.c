@@ -31,10 +31,10 @@ typedef struct avl_tree_node {
 } avl_tree_node;
 
 struct avl_tree_iterator {
-  avl_tree *tree;
-  void **nodes;
-  unsigned int current_index;
-  unsigned int nodes_current_size;
+  avl_tree *tree;                  // AVL tree to iterate through
+  void **tree_data;                // array of node->data of AVL tree
+  unsigned int current_index;      // keep track of current item in the array
+  unsigned int nodes_current_size; // use when add tree data to 'tree_data'
 };
 
 /**
@@ -69,19 +69,20 @@ static avl_tree_node *avl_tree_node_create(void *data) {
  *   /
  *  1
  */
-static avl_tree_node *right_rotation(avl_tree_node *y) {
-  avl_tree_node *x = y->left;
-  avl_tree_node *T2 = x->right;
+static avl_tree_node *right_rotation(avl_tree_node *node) {
+  avl_tree_node *left_child = node->left;
+  avl_tree_node *right_grandchild = left_child->right;
 
   // rotate
-  x->right = y;
-  y->left = T2;
+  left_child->right = node;
+  node->left = right_grandchild;
 
   // update heights
-  y->height = MAX(GET_HEIGHT(y->left), GET_HEIGHT(y->right)) + 1;
-  x->height = MAX(GET_HEIGHT(x->left), GET_HEIGHT(x->right)) + 1;
+  node->height = MAX(GET_HEIGHT(node->left), GET_HEIGHT(node->right)) + 1;
+  left_child->height =
+      MAX(GET_HEIGHT(left_child->left), GET_HEIGHT(left_child->right)) + 1;
 
-  return x;
+  return left_child;
 }
 
 /**
@@ -96,19 +97,20 @@ static avl_tree_node *right_rotation(avl_tree_node *y) {
  *       \
  *        3
  */
-static avl_tree_node *left_rotation(avl_tree_node *x) {
-  avl_tree_node *y = x->right;
-  avl_tree_node *T2 = y->left;
+static avl_tree_node *left_rotation(avl_tree_node *node) {
+  avl_tree_node *right_child = node->right;
+  avl_tree_node *left_grandchild = right_child->left;
 
   // rotate
-  y->left = x;
-  x->right = T2;
+  right_child->left = node;
+  node->right = left_grandchild;
 
   // update heights
-  x->height = MAX(GET_HEIGHT(x->left), GET_HEIGHT(x->right)) + 1;
-  y->height = MAX(GET_HEIGHT(y->left), GET_HEIGHT(y->right)) + 1;
+  node->height = MAX(GET_HEIGHT(node->left), GET_HEIGHT(node->right)) + 1;
+  right_child->height =
+      MAX(GET_HEIGHT(right_child->left), GET_HEIGHT(right_child->right)) + 1;
 
-  return y;
+  return right_child;
 }
 
 /**
@@ -390,14 +392,21 @@ int avl_tree_destroy(avl_tree **tree) {
   return 0;
 }
 
-static void build_iteratorator_array(avl_tree_node *node, avl_tree_iterator *it) {
+/**
+ *  Traverse the tree node by node and add 'node->data' to the 'it->nodes' array
+ *
+ *  @param node AVL tree node
+ *  @parm it AVL tree iterator
+ */
+static void add_tree_data_to_iterator(avl_tree_node *node,
+                                      avl_tree_iterator *it) {
   if (node == NULL) {
     return;
   }
 
-  build_iteratorator_array(node->left, it);
-  it->nodes[it->nodes_current_size++] = node->data;
-  build_iteratorator_array(node->right, it);
+  add_tree_data_to_iterator(node->left, it);
+  it->tree_data[it->nodes_current_size++] = node->data;
+  add_tree_data_to_iterator(node->right, it);
 }
 
 int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree) {
@@ -409,7 +418,7 @@ int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree) {
     return 1;
   }
 
-  if (((*it)->nodes = malloc(sizeof(void *) * tree->size)) == NULL) {
+  if (((*it)->tree_data = malloc(sizeof(void *) * tree->size)) == NULL) {
     return 1;
   }
 
@@ -417,7 +426,7 @@ int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree) {
   (*it)->current_index = 0;
   (*it)->nodes_current_size = 0;
 
-  build_iteratorator_array(tree->root, *it);
+  add_tree_data_to_iterator(tree->root, *it);
 
   return 0;
 }
@@ -431,7 +440,7 @@ int avl_tree_iterator_next(avl_tree_iterator *it, void **data) {
     return 1;
   }
 
-  *data = it->nodes[it->current_index++];
+  *data = it->tree_data[it->current_index++];
 
   return 0;
 }
@@ -444,7 +453,7 @@ int avl_tree_iterator_reset(avl_tree_iterator **it) {
   (*it)->current_index = 0;
   (*it)->nodes_current_size = 0;
 
-  build_iteratorator_array((*it)->tree->root, *it);
+  add_tree_data_to_iterator((*it)->tree->root, *it);
 
   return 0;
 }
@@ -454,7 +463,7 @@ int avl_tree_iterator_destroy(avl_tree_iterator **it) {
     return 1;
   }
 
-  free((*it)->nodes);
+  free((*it)->tree_data);
   free(*it);
   *it = NULL;
 
