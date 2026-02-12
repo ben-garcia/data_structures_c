@@ -9,7 +9,7 @@ typedef struct linked_list_node {
   void *data;
 } linked_list_node;
 
-struct linked_list_iter {
+struct linked_list_iterator {
   linked_list_node *next;
 };
 
@@ -205,12 +205,12 @@ int linked_list_destroy(linked_list **list) {
   return 0;
 }
 
-int linked_list_iter_create(linked_list_iter **it, linked_list *list) {
+int linked_list_iterator_create(linked_list_iterator **it, linked_list *list) {
   if (list->length == 0) {
     return 1;
   }
 
-  if (((*it) = malloc(sizeof(linked_list_iter))) == NULL) {
+  if (((*it) = malloc(sizeof(linked_list_iterator))) == NULL) {
     return 1;
   }
 
@@ -219,7 +219,7 @@ int linked_list_iter_create(linked_list_iter **it, linked_list *list) {
   return 0;
 }
 
-int linked_list_iter_destroy(linked_list_iter **it) {
+int linked_list_iterator_destroy(linked_list_iterator **it) {
   if (*it == NULL) {
     return 1;
   }
@@ -229,7 +229,7 @@ int linked_list_iter_destroy(linked_list_iter **it) {
   return 0;
 }
 
-int linked_list_iter_next(linked_list_iter *it, void **value) {
+int linked_list_iterator_next(linked_list_iterator *it, void **value) {
   if (it == NULL || it->next == NULL) {
     *value = NULL;
     return 1;
@@ -243,7 +243,7 @@ int linked_list_iter_next(linked_list_iter *it, void **value) {
   return 0;
 }
 
-int linked_list_iter_reset(linked_list_iter **it, linked_list *list) {
+int linked_list_iterator_reset(linked_list_iterator **it, linked_list *list) {
   if (list->length == 0) {
     return 1;
   }

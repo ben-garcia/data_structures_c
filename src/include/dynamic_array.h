@@ -2,7 +2,7 @@
 #define DYNAMIC_ARRAY_H
 
 typedef struct dynamic_array dynamic_array;
-typedef struct dynamic_array_iter dynamic_array_iter;
+typedef struct dynamic_array_iterator dynamic_array_iterator;
 
 /**
  * @brief Allocate necessary resources and setup.
@@ -108,7 +108,7 @@ void dynamic_array_destroy(dynamic_array **array);
  * @param array dynamic_array array to iterate through.
  * @return 0 on success, 1 otherwise
  */
- int dynamic_array_iter_create(dynamic_array_iter **it, dynamic_array *array);
+ int dynamic_array_iterator_create(dynamic_array_iterator **it, dynamic_array *array);
 
 /**
  * @brief Get the next element of the dynamic array
@@ -117,7 +117,7 @@ void dynamic_array_destroy(dynamic_array **array);
  * @param item value used to hold the next elmeent in the array.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_iter_next(dynamic_array_iter *it, void **item);
+int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item);
 
 /**
  * @brief Reset the dynamic array iterator.
@@ -125,7 +125,7 @@ int dynamic_array_iter_next(dynamic_array_iter *it, void **item);
  * @param it dynamic array iterator
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_iter_reset(dynamic_array_iter *it);
+int dynamic_array_iterator_reset(dynamic_array_iterator *it);
 
 /**
  * @brief Deallocate and set to NULL.
@@ -133,6 +133,6 @@ int dynamic_array_iter_reset(dynamic_array_iter *it);
  * @param it dynamic array iterator to deallocate.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_iter_destroy(dynamic_array_iter **it);
+int dynamic_array_iterator_destroy(dynamic_array_iterator **it);
 
 #endif // DYNAMIC_ARRAY_H

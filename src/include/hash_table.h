@@ -3,7 +3,7 @@
 
 typedef struct hash_table_entry hash_table_entry;
 typedef struct hash_table hash_table;
-typedef struct hash_table_iter hash_table_iter;
+typedef struct hash_table_iterator hash_table_iterator;
 
 /**
  * Allocate necessary resources and setup.
@@ -110,7 +110,7 @@ int hash_table_destroy(hash_table **ht);
  * @param ht hash table to iterate through.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_iter_create(hash_table_iter **it, hash_table *table);
+int hash_table_iterator_create(hash_table_iterator **it, hash_table *table);
 
 /**
  * Get the next entry in the hash table.
@@ -119,7 +119,7 @@ int hash_table_iter_create(hash_table_iter **it, hash_table *table);
  * @param entry value used to hold the next entry in the hash table.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_iter_next(hash_table_iter *it, hash_table_entry **entry);
+int hash_table_iterator_next(hash_table_iterator *it, hash_table_entry **entry);
 
 /**
  * Reset the hash table iterator.
@@ -129,7 +129,7 @@ int hash_table_iter_next(hash_table_iter *it, hash_table_entry **entry);
  * @param it hash table iterator
  * @return 0 on success, 1 otherwise
  */
-int hash_table_iter_reset(hash_table_iter *it);
+int hash_table_iterator_reset(hash_table_iterator *it);
 
 /**
  * Deallocate and set to NULL.
@@ -137,6 +137,6 @@ int hash_table_iter_reset(hash_table_iter *it);
  * @param it hash table iterator to deallocate.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_iter_destroy(hash_table_iter **it);
+int hash_table_iterator_destroy(hash_table_iterator **it);
 
 #endif // HASH_TABLE_H

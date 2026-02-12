@@ -19,7 +19,7 @@ struct hash_table {
   unsigned data_size; // sizeo of each item in the buckets
 };
 
-struct hash_table_iter {
+struct hash_table_iterator {
   hash_table_entry *entries;
   unsigned size;
   unsigned capacity;
@@ -356,12 +356,12 @@ int hash_table_destroy(hash_table **ht) {
   return 0;
 }
 
-int hash_table_iter_create(hash_table_iter **it, hash_table *ht) {
+int hash_table_iterator_create(hash_table_iterator **it, hash_table *ht) {
   if (ht == NULL || ht->size == 0) {
     return 1;
   }
 
-  if (((*it) = malloc(sizeof(hash_table_iter))) == NULL) {
+  if (((*it) = malloc(sizeof(hash_table_iterator))) == NULL) {
     return 1;
   }
 
@@ -373,7 +373,7 @@ int hash_table_iter_create(hash_table_iter **it, hash_table *ht) {
   return 0;
 }
 
-int hash_table_iter_next(hash_table_iter *it, hash_table_entry **entry) {
+int hash_table_iterator_next(hash_table_iterator *it, hash_table_entry **entry) {
   if (it == NULL || it->size == 0 || it->index > it->capacity - 1) {
     return 1;
   }
@@ -397,19 +397,21 @@ int hash_table_iter_next(hash_table_iter *it, hash_table_entry **entry) {
   return 0;
 }
 
-int hash_table_iter_reset(hash_table_iter *it) {
+int hash_table_iterator_reset(hash_table_iterator *it) {
   if (it == NULL) {
     return 1;
   }
 
   it->index = 0;
+
   return 0;
 }
 
-int hash_table_iter_destroy(hash_table_iter **it) {
+int hash_table_iterator_destroy(hash_table_iterator **it) {
   if (*it == NULL) {
     return 1;
   }
+
   free(*it);
   *it = NULL;
 

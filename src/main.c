@@ -22,11 +22,11 @@ int main(void) {
     *num = i;
     dynamic_array_add(numbers, num);
   }
-  dynamic_array_iter *numbers_it;
+  dynamic_array_iterator *numbers_it;
   long *value = NULL;
-  dynamic_array_iter_create(&numbers_it, numbers);
+  dynamic_array_iterator_create(&numbers_it, numbers);
   printf("===========dynamic_array(numbers)==============\n");
-  while ((dynamic_array_iter_next(numbers_it, (void **)&value)) == 0) {
+  while ((dynamic_array_iterator_next(numbers_it, (void **)&value)) == 0) {
     printf("%ld ", *value);
   }
   printf("\n\n");
@@ -55,11 +55,11 @@ int main(void) {
   dynamic_array_add(strings, buffer);
   dynamic_array_add(strings, view_buffer);
   dynamic_array_add(strings, view2_buffer);
-  dynamic_array_iter *strings_it;
-  dynamic_array_iter_create(&strings_it, strings);
+  dynamic_array_iterator *strings_it;
+  dynamic_array_iterator_create(&strings_it, strings);
   char *str;
   printf("===========dynamic_array(strings)==============\n");
-  while (dynamic_array_iter_next(strings_it, (void **)&str) == 0) {
+  while (dynamic_array_iterator_next(strings_it, (void **)&str) == 0) {
     printf("'%s'\n", str);
   }
   printf("\n");
@@ -73,20 +73,20 @@ int main(void) {
     linked_list_add(floats, f_ptr);
   }
 
-  linked_list_iter *float_it;
+  linked_list_iterator *float_it;
   float *fvalue;
-  linked_list_iter_create(&float_it, floats);
+  linked_list_iterator_create(&float_it, floats);
   printf("===========linked_list(floats)==============\n");
-  while (linked_list_iter_next(float_it, (void **)&fvalue) == 0) {
+  while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
     printf("%f -> ", *fvalue);
   }
   printf("NULL\n\n");
 
   linked_list_reverse(&floats);
 
-  linked_list_iter_reset(&float_it, floats);
+  linked_list_iterator_reset(&float_it, floats);
   printf("===========linked_list(floats) reversed==============\n");
-  while (linked_list_iter_next(float_it, (void **)&fvalue) == 0) {
+  while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
     printf("%f -> ", *fvalue);
   }
   printf("NULL\n\n");
@@ -99,11 +99,11 @@ int main(void) {
     snprintf(c_ptr, 2, "%c", c);
     hash_table_insert(chars, c_ptr, c_ptr);
   }
-  hash_table_iter *chars_it;
+  hash_table_iterator *chars_it;
   hash_table_entry *entry;
-  hash_table_iter_create(&chars_it, chars);
+  hash_table_iterator_create(&chars_it, chars);
   printf("===========hash_table(char)==============\n");
-  while ((hash_table_iter_next(chars_it, &entry)) == 0) {
+  while ((hash_table_iterator_next(chars_it, &entry)) == 0) {
     char *cvalue;
     char *ckey;
     hash_table_get_entry_key(entry, &ckey);
@@ -189,13 +189,13 @@ int main(void) {
   // de-allocate
   dynamic_array_destroy(&numbers);
   dynamic_array_destroy(&strings);
-  dynamic_array_iter_destroy(&numbers_it);
-  dynamic_array_iter_destroy(&strings_it);
+  dynamic_array_iterator_destroy(&numbers_it);
+  dynamic_array_iterator_destroy(&strings_it);
   string_builder_destroy(&sb);
   linked_list_destroy(&floats);
-  linked_list_iter_destroy(&float_it);
+  linked_list_iterator_destroy(&float_it);
   hash_table_destroy(&chars);
-  hash_table_iter_destroy(&chars_it);
+  hash_table_iterator_destroy(&chars_it);
   avl_tree_destroy(&tree);
   avl_tree_iterator_destroy(&avl_it);
   free(buffer);

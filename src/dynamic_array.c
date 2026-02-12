@@ -12,7 +12,7 @@ struct dynamic_array {
   unsigned int data_size; // bytes needed for every element..
 };
 
-struct dynamic_array_iter {
+struct dynamic_array_iterator {
   void **items;
   unsigned data_size;
   unsigned size;
@@ -179,8 +179,8 @@ void dynamic_array_destroy(dynamic_array **array) {
   *array = NULL;
 }
 
-int dynamic_array_iter_create(dynamic_array_iter **it, dynamic_array *array) {
-  if ((*it = malloc(sizeof(dynamic_array_iter))) == NULL) {
+int dynamic_array_iterator_create(dynamic_array_iterator **it, dynamic_array *array) {
+  if ((*it = malloc(sizeof(dynamic_array_iterator))) == NULL) {
     return 1;
   }
 
@@ -192,7 +192,7 @@ int dynamic_array_iter_create(dynamic_array_iter **it, dynamic_array *array) {
   return 0;
 }
 
-int dynamic_array_iter_next(dynamic_array_iter *it, void **item) {
+int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item) {
   if (it->size == 0 || it->index >= it->size) {
     return 1;
   }
@@ -204,7 +204,7 @@ int dynamic_array_iter_next(dynamic_array_iter *it, void **item) {
   return 0;
 }
 
-int dynamic_array_iter_reset(dynamic_array_iter *it) {
+int dynamic_array_iterator_reset(dynamic_array_iterator *it) {
   if (it == NULL) {
     return 1;
   }
@@ -213,7 +213,7 @@ int dynamic_array_iter_reset(dynamic_array_iter *it) {
   return 0;
 }
 
-int dynamic_array_iter_destroy(dynamic_array_iter **it) {
+int dynamic_array_iterator_destroy(dynamic_array_iterator **it) {
   if (*it == NULL) {
     return 1;
   }

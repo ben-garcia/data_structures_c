@@ -2,7 +2,7 @@
 #define LINKED_LIST_H
 
 typedef struct linked_list linked_list;
-typedef struct linked_list_iter linked_list_iter;
+typedef struct linked_list_iterator linked_list_iterator;
 
 int linked_list_create(linked_list **list, void (*freefn)(void **),
                        int (*matchfn)(void *, void *));
@@ -12,9 +12,9 @@ int linked_list_remove(linked_list *list, void *data);
 int linked_list_reverse(linked_list **list);
 int linked_list_destroy(linked_list **list);
 
-int linked_list_iter_create(linked_list_iter **it, linked_list *list);
-int linked_list_iter_next(linked_list_iter *it, void **value);
-int linked_list_iter_reset(linked_list_iter **it, linked_list *list);
-int linked_list_iter_destroy(linked_list_iter **it);
+int linked_list_iterator_create(linked_list_iterator **it, linked_list *list);
+int linked_list_iterator_next(linked_list_iterator *it, void **value);
+int linked_list_iterator_reset(linked_list_iterator **it, linked_list *list);
+int linked_list_iterator_destroy(linked_list_iterator **it);
 
 #endif // LINKED_LIST_H
