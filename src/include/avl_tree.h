@@ -2,6 +2,7 @@
 #define AVL_TREE_H
 
 typedef struct avl_tree avl_tree;
+typedef struct avl_tree_iterator avl_tree_iterator;
 
 /**
  * @brief Create the AVL 'tree'
@@ -57,5 +58,43 @@ unsigned int avl_tree_get_size(avl_tree *tree);
  * @return 0 on success, 1 otherwise
 */
 int avl_tree_destroy(avl_tree **tree);
+
+/**
+ * Allocate necessary resources and setup.
+ *
+ * Use to iterate through an AVL tree.
+ *
+ * @param it AVL tree iterator to create.
+ * @param tree AVL tree to iterate through.
+ * @return 0 on success, 1 otherwise
+ */
+int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree);
+
+/**
+ * Get the next data in the AVL tree.
+ *
+ * @param it AVL tree iterator
+ * @param data value used to hold the next data in the AVL tree 
+ * @return 0 on success, 1 otherwise
+ */
+int avl_tree_iterator_next(avl_tree_iterator *it, void **data);
+
+/**
+ * Reset the AVL tree iterator.
+ *
+ * Use before iterating AVL tree for a second time.
+ *
+ * @param it AVL tree iterator
+ * @return 0 on success, 1 otherwise
+ */
+int avl_tree_iterator_reset(avl_tree_iterator **it);
+
+/**
+ * Deallocate and set to NULL.
+ *
+ * @param it AVL tree iterator to deallocate.
+ * @return 0 on success, 1 otherwise
+ */
+int avl_tree_iterator_destroy(avl_tree_iterator **it);
 
 #endif // AVL_TREE_H

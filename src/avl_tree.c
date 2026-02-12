@@ -20,7 +20,7 @@ struct avl_tree {
    *             > 0 if a > b
    */
   int (*comparefn)(const void *a, const void *b);
-  int size; // number of nodes
+  unsigned int size; // number of nodes
 };
 
 typedef struct avl_tree_node {
@@ -29,6 +29,13 @@ typedef struct avl_tree_node {
   void *data;
   int height;
 } avl_tree_node;
+
+struct avl_tree_iterator {
+  avl_tree *tree;
+  void **nodes;
+  unsigned int current_index;
+  unsigned int nodes_current_size;
+};
 
 /**
  * Create a AVL Tree node
@@ -379,6 +386,77 @@ int avl_tree_destroy(avl_tree **tree) {
 
   free(*tree);
   *tree = NULL;
+
+  return 0;
+}
+
+static void build_iteratorator_array(avl_tree_node *node, avl_tree_iterator *it) {
+  if (node == NULL) {
+    return;
+  }
+
+  build_iteratorator_array(node->left, it);
+  it->nodes[it->nodes_current_size++] = node->data;
+  build_iteratorator_array(node->right, it);
+}
+
+int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree) {
+  if (tree == NULL || tree->size == 0) {
+    return 1;
+  }
+
+  if (((*it) = malloc(sizeof(avl_tree_iterator))) == NULL) {
+    return 1;
+  }
+
+  if (((*it)->nodes = malloc(sizeof(void *) * tree->size)) == NULL) {
+    return 1;
+  }
+
+  (*it)->tree = tree;
+  (*it)->current_index = 0;
+  (*it)->nodes_current_size = 0;
+
+  build_iteratorator_array(tree->root, *it);
+
+  return 0;
+}
+
+int avl_tree_iterator_next(avl_tree_iterator *it, void **data) {
+  if (it == NULL) {
+    return 1;
+  }
+
+  if (it->current_index >= it->tree->size) { // out of bounds check
+    return 1;
+  }
+
+  *data = it->nodes[it->current_index++];
+
+  return 0;
+}
+
+int avl_tree_iterator_reset(avl_tree_iterator **it) {
+  if (it == NULL) {
+    return 1;
+  }
+
+  (*it)->current_index = 0;
+  (*it)->nodes_current_size = 0;
+
+  build_iteratorator_array((*it)->tree->root, *it);
+
+  return 0;
+}
+
+int avl_tree_iterator_destroy(avl_tree_iterator **it) {
+  if (*it == NULL) {
+    return 1;
+  }
+
+  free((*it)->nodes);
+  free(*it);
+  *it = NULL;
 
   return 0;
 }

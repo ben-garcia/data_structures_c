@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 void free_function(void **item) { free(*item); }
-int comparefn(const void *a, const void *b) { return (long)a - (long)b; }
+int comparefn(const void *a, const void *b) { return *(long *)a - *(long *)b; }
 
 int main(void) {
   // dynamic array of longs
@@ -113,23 +113,40 @@ int main(void) {
   printf("\n\n");
 
   // AVL tree
-  printf("=============avl tree==============\n");
+  printf("=============AVL tree=================\n");
   long tree_data[9] = {2, 1, 7, 4, 5, 5, 3, 8, 15};
   avl_tree *tree;
 
   avl_tree_create(&tree, comparefn);
 
-  for (long i = 0; i < 8; i++) {
-    printf("inseting %ld\n", tree_data[i]);
-    avl_tree_insert(tree, (void *)tree_data[i]);
+  printf("inserting... ");
+  for (int i = 0; i < 8; i++) {
+    printf("%ld ", tree_data[i]);
+    avl_tree_insert(tree, (void *)&tree_data[i]);
+  }
+  printf("\n");
+
+  avl_tree_iterator *avl_it;
+
+  avl_tree_iterator_create(&avl_it, tree);
+  long *node_data;
+
+  printf("AVL tree contains: ");
+  while (avl_tree_iterator_next(avl_it, (void **)&node_data) == 0) {
+    printf("%ld ", *node_data);
   }
 
-  avl_tree_search(tree, (void *)tree_data[8]); // 5
+  printf("\ndeleting... %ld %ld\n", tree_data[8], tree_data[0]);
+  avl_tree_delete(tree, (void *)&tree_data[8]); // 15
+  avl_tree_delete(tree, (void *)&tree_data[0]); // 2
 
-  printf("\ndeleting %ld\n", tree_data[8]);
-  avl_tree_delete(tree, (void *)tree_data[8]); // 15
-  printf("deleting %ld\n\n", tree_data[0]);
-  avl_tree_delete(tree, (void *)tree_data[0]); // 2
+  avl_tree_iterator_reset(&avl_it);
+
+  printf("AVL tree contains: ");
+  while (avl_tree_iterator_next(avl_it, (void **)&node_data) == 0) {
+    printf("%ld ", *node_data);
+  }
+  printf("\n\n");
 
   printf("=============stack====================\n");
   char *stack_data[] = {"s", "t", "a", "c", "k"};
@@ -180,6 +197,7 @@ int main(void) {
   hash_table_destroy(&chars);
   hash_table_iter_destroy(&chars_it);
   avl_tree_destroy(&tree);
+  avl_tree_iterator_destroy(&avl_it);
   free(buffer);
   free(view_buffer);
   free(view2_buffer);
