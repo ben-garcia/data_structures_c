@@ -20,7 +20,8 @@ struct avl_tree {
    *             > 0 if a > b
    */
   int (*comparefn)(const void *a, const void *b);
-  unsigned int size; // number of nodes
+  void (*freefn)(void *data); // deallocation function
+  unsigned int size;          // number of nodes
 };
 
 typedef struct avl_tree_node {
@@ -214,25 +215,24 @@ static avl_tree_node *get_min_value_node(avl_tree_node *node) {
  *  @param data the item to delete to the node
  *  @param is_found flag that indicates if a node with 'data' is found
  *  @param comparefn comparison function
+ *  @param freefn deallocation function
  *  @return 'node' param
  */
 static avl_tree_node *
 delete_node(avl_tree_node *node, void *data, int *is_found,
-            int (*comparefn)(const void *a, const void *b)) {
+            int (*comparefn)(const void *a, const void *b),
+            void (*freefn)(void *data)) {
   if (node == NULL) {
     *is_found = 0; // node not found
     return node;
   }
 
-  if (data < node->data) {
-    node->left = delete_node(node->left, data, is_found, comparefn);
-  }
-
-  else if (data > node->data) {
-    node->right = delete_node(node->right, data, is_found, comparefn);
-  }
-
-  else {
+  int compare_result = comparefn(data, node->data);
+  if (compare_result < 0) {
+    node->left = delete_node(node->left, data, is_found, comparefn, freefn);
+  } else if (compare_result > 0) {
+    node->right = delete_node(node->right, data, is_found, comparefn, freefn);
+  } else {
     if ((node->left == NULL) || (node->right == NULL)) {
       avl_tree_node *temp = node->left ? node->left : node->right;
 
@@ -242,13 +242,19 @@ delete_node(avl_tree_node *node, void *data, int *is_found,
       } else {
         *node = *temp;
       }
+
       free(temp);
     } else {
       avl_tree_node *temp = get_min_value_node(node->right);
 
+      if (freefn != NULL) {
+        freefn(node->data); // deallocate the data to be deleted
+      }
+
       node->data = temp->data;
 
-      node->right = delete_node(node->right, temp->data, is_found, comparefn);
+      node->right =
+          delete_node(node->right, temp->data, is_found, comparefn, freefn);
     }
   }
 
@@ -318,18 +324,24 @@ static void *search(avl_tree_node *node, void *data,
  *
  * @param node the root node to start from
  */
-static void destroy(avl_tree_node *node) {
+static void destroy(avl_tree_node *node, void (*freefn)(void *data)) {
   if (node == NULL) {
     return;
   }
 
-  destroy(node->left);
-  destroy(node->right);
+  destroy(node->left, freefn);
+  destroy(node->right, freefn);
+
+  if (freefn != NULL) {
+    freefn(node->data); // deallocate node->data
+  }
+
   free(node);
 }
 
 int avl_tree_create(avl_tree **tree,
-                    int (*comparefn)(const void *a, const void *b)) {
+                    int (*comparefn)(const void *a, const void *b),
+                    void (*freefn)(void *data)) {
   if (comparefn == NULL) {
     return 1;
   }
@@ -338,6 +350,7 @@ int avl_tree_create(avl_tree **tree,
   }
 
   (*tree)->comparefn = comparefn;
+  (*tree)->freefn = freefn;
   (*tree)->root = NULL;
   (*tree)->size = 0;
 
@@ -370,10 +383,11 @@ int avl_tree_search(avl_tree *tree, void *data) {
 int avl_tree_delete(avl_tree *tree, void *data) {
   int result = 1;
 
-  tree->root = delete_node(tree->root, data, &result, tree->comparefn);
+  tree->root =
+      delete_node(tree->root, data, &result, tree->comparefn, tree->freefn);
 
   if (result == 1) {
-    tree->size--; // only decrement size if key is found
+    tree->size--; // only decrement size if data is found
   }
 
   return !result;
@@ -384,7 +398,7 @@ int avl_tree_destroy(avl_tree **tree) {
     return 1;
   }
 
-  destroy((*tree)->root);
+  destroy((*tree)->root, (*tree)->freefn);
 
   free(*tree);
   *tree = NULL;

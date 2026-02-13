@@ -12,9 +12,10 @@ typedef struct avl_tree_iterator avl_tree_iterator;
  *        MUST return 0 if a == b,
  *             negative number if a < b
  *             positive number if a > b,
+ * @param freefn deallocate function
  * @return 0 on success, 1 otherwise
  */
-int avl_tree_create(avl_tree **tree, int (*comparefn)(const void *a, const void *b));
+int avl_tree_create(avl_tree **tree, int (*comparefn)(const void *a, const void *b), void (*freefn)(void *data));
 
 /**
  * @brief Search the 'tree' for 'data'

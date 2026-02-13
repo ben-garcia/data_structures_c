@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 void free_function(void **item) { free(*item); }
+void free_long(void *data) { free(data); }
 int comparefn(const void *a, const void *b) { return *(long *)a - *(long *)b; }
 
 int main(void) {
@@ -117,12 +118,16 @@ int main(void) {
   long tree_data[9] = {2, 1, 7, 4, 5, 5, 3, 8, 15};
   avl_tree *tree;
 
-  avl_tree_create(&tree, comparefn);
+  avl_tree_create(&tree, comparefn, free_long);
 
   printf("inserting... ");
   for (int i = 0; i < 8; i++) {
     printf("%ld ", tree_data[i]);
-    avl_tree_insert(tree, (void *)&tree_data[i]);
+    long *data_ptr = malloc(sizeof(long));
+    *data_ptr = tree_data[i];
+    if (avl_tree_insert(tree, (void *)data_ptr) != 0) {
+      free(data_ptr); // insertion failed, no duplicates
+    }
   }
   printf("\n");
 
@@ -135,7 +140,6 @@ int main(void) {
   while (avl_tree_iterator_next(avl_it, (void **)&node_data) == 0) {
     printf("%ld ", *node_data);
   }
-
   printf("\ndeleting... %ld %ld\n", tree_data[8], tree_data[0]);
   avl_tree_delete(tree, (void *)&tree_data[8]); // 15
   avl_tree_delete(tree, (void *)&tree_data[0]); // 2
