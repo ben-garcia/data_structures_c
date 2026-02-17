@@ -199,7 +199,7 @@ int main(void) {
   char *stack_data[] = {"s", "t", "a", "c", "k"};
   stack *my_stack;
 
-  stack_create(&my_stack);
+  stack_create(&my_stack, NULL);
 
   for (int i = 0; i < 5; i++) {
     printf("pushing %s\n", stack_data[i]);

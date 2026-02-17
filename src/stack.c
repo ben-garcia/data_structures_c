@@ -7,15 +7,17 @@ typedef struct stack_node {
 } stack_node;
 
 struct stack {
-  stack_node *head; // linked list head
+  stack_node *head;           // linked list head
+  void (*freefn)(void *data); // deallocation function for custom data type
   unsigned int size;
 };
 
-int stack_create(stack **s) {
+int stack_create(stack **s, void (*freefn)(void *data)) {
   if ((*s = malloc(sizeof(stack))) == NULL) {
     return 1;
   }
 
+  (*s)->freefn = freefn;
   (*s)->head = NULL;
   (*s)->size = 0;
 
@@ -68,18 +70,24 @@ int stack_pop(stack *s, void **data) {
 
   stack_node *node = s->head;
 
-  if (s->size == 1) {
-    void *temp = node->data;
-    s->head = NULL;
-    s->size--;
-    free(node);
-    *data = temp;
-    return 0;
-  }
+  // if (s->size == 1) {
+  //   void *temp = node->data;
+  //   s->head = NULL;
+  //   s->size--;
+  //   if (s->freefn != NULL) {
+  //     s->freefn(node->data);
+  //   }
+  //   free(node);
+  //   *data = temp;
+  //   return 0;
+  // }
 
   void *temp = node->data;
   s->head = node->next;
   s->size--;
+  if (s->freefn != NULL) {
+    s->freefn(node->data);
+  }
   free(node);
 
   *data = temp;
@@ -90,7 +98,14 @@ int stack_get_size(stack *s) { return s->size; }
 
 int stack_is_empty(stack *s) { return !(s->size == 0); }
 
-void *stack_peek(stack *s) { return s->head->data; }
+int stack_peek(stack *s, void **data) {
+  if (s == NULL || s->size == 0) {
+    return 1;
+  }
+
+  *data =  s->head->data;
+  return 0;
+}
 
 int stack_destroy(stack **s) {
   if (*s == NULL) { // nothing to do
@@ -105,6 +120,9 @@ int stack_destroy(stack **s) {
   while (current != NULL) {
     stack_node *node = current;
     current = current->next;
+    if((*s)->freefn != NULL) {
+      (*s)->freefn(node->data);
+    }
     free(node);
   }
 

@@ -7,9 +7,10 @@ typedef struct stack stack;
  * @brief Allocate resource and setup 
  *
  * @param s the stack to initialize
+ * @param freefn deallocation fuction for custom data types
  * @return 0 on success, 1 otherwise
  */
-int stack_create(stack **s);
+int stack_create(stack **s, void (*freefn)(void *data));
 
 /**
  * @brief Insert 'data' on to the stack 
@@ -33,7 +34,7 @@ int stack_pop(stack *s, void **data);
  * @brief Return the size of the stack 
  *
  * @param s the stack to initialize
- * @return the size of the stack 
+ * @return the size of the stack
  */
 int stack_get_size(stack *s);
 
@@ -49,9 +50,10 @@ int stack_is_empty(stack *s);
  * @brief Return the data of the top of the stack 
  *
  * @param s the stack 
- * @return the 'data' associated with the top of the stack 
+ * @param data the 'data' associated with the top of the stack 
+ * @return 0 on success, 1 otherwise
  */
-void *stack_peek(stack *s);
+int stack_peek(stack *s, void **data);
 
 /**
  * @brief Deallocate all resources 
