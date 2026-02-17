@@ -64,19 +64,18 @@ int queue_enqueue(queue *q, void *data) {
   return 0;
 }
 
-void *queue_dequeue(queue *q) {
+int queue_dequeue(queue *q) {
   if (q == NULL || q->head == NULL) {
-    return NULL;
+    return 1;
   }
 
   queue_node *temp = q->head;
-  void *data = temp->data;
 
   q->head = q->head->next;
   free(temp);
   q->size--;
 
-  return data;
+  return 0;
 }
 
 int queue_is_empty(queue *q) {
@@ -87,20 +86,24 @@ int queue_is_empty(queue *q) {
   return !(q->size == 0);
 }
 
-void *queue_peek_front(queue *q) {
+int queue_peek_front(queue *q, void **data) {
   if (queue_is_empty(q) == 0) {
-    return NULL;
+    return 1;
   }
 
-  return q->head->data;
+  *data = q->head->data;
+
+  return 0;
 }
 
-void *queue_peek_back(queue *q) {
+int queue_peek_back(queue *q, void **data) {
   if (queue_is_empty(q) == 0) {
-    return NULL;
+    return 1;
   }
 
-  return q->tail->data;
+  *data =  q->tail->data;
+
+  return 0;
 }
 
 int queue_get_size(queue *q) {

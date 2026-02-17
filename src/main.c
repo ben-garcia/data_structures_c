@@ -209,7 +209,9 @@ int main(void) {
   printf("\n");
 
   while (stack_is_empty(my_stack) != 0) {
-    printf("poping %s\n", (char *)stack_pop(my_stack));
+    void *data;
+    stack_pop(my_stack, &data);
+    printf("poping %s\n", (char*)data);
   }
 
   printf("\n");
@@ -228,7 +230,10 @@ int main(void) {
   printf("\n");
 
   while (queue_is_empty(my_queue) != 0) {
-    printf("dequeing %s\n", (char *)queue_dequeue(my_queue));
+    void *data;
+    queue_peek_front(my_queue, &data);
+    printf("dequeing %c\n", *(char *)data);
+    queue_dequeue(my_queue);
   }
 
   printf("\n");

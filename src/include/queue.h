@@ -4,7 +4,7 @@
 typedef struct queue queue;
 
 /**
- * @brief Allocate resource and setup 
+ * @brief Allocate resource and setup
  *
  * @param q the queue to initialize
  * @return 0 on success, 1 otherwise
@@ -12,43 +12,45 @@ typedef struct queue queue;
 int queue_create(queue **q);
 
 /**
- * @brief Insert 'data' in end/tail of the queue 
+ * @brief Insert 'data' in end/tail of the queue
  *
- * @param q the queue to modify 
+ * @param q the queue to modify
  * @param data the data to add
  * @return 0 on success, 1 otherwise
  */
 int queue_enqueue(queue *q, void *data);
 
 /**
- * @brief Remove 'data' in front/head without modifying the queue 
+ * @brief Remove 'data' in front/head
  *
- * @param q the queue to modify 
+ * @param q the queue to modify
  * @return 0 on success, 1 otherwise
  */
-void *queue_dequeue(queue *q);
+int queue_dequeue(queue *q);
 
 /**
- * @brief Return the data of the front/head of the queue 
- *
- * @param q the queue 
- * @return the data at that node 
- */
-void *queue_peek_front(queue *q);
-
-/**
- * @brief Return the data of the back/tail wihtout modifying the queue
- *
- * @param q the queue 
- * @return the data at that node 
- */
-void *queue_peek_back(queue *q);
-
-/**
- * @brief Return the size of the queue 
+ * @brief Return the data at the front/head of the queue
  *
  * @param q the queue
- * @return the size of the queue 
+ * @param data the buffer to store the data at the front/head of the queue
+ * @return 0 on success, 1 otherwise
+ */
+int queue_peek_front(queue *q, void **data);
+
+/**
+ * @brief Return the data at the back/tail wihtout modifying the queue
+ *
+ * @param q the queue
+ * @param data the buffer to store the data at back/tail of the queue
+ * @return 0 on success, 1 otherwise
+ */
+int queue_peek_back(queue *q, void **data);
+
+/**
+ * @brief Return the size of the queue
+ *
+ * @param q the queue
+ * @return the size of the queue
  */
 int queue_get_size(queue *q);
 
@@ -61,7 +63,7 @@ int queue_get_size(queue *q);
 int queue_is_empty(queue *q);
 
 /**
- * @brief Deallocate all resources 
+ * @brief Deallocate all resources
  *
  * @param q the queue to deallocate
  * @return 0 on success, 1 otherwise
@@ -69,4 +71,3 @@ int queue_is_empty(queue *q);
 int queue_destroy(queue **q);
 
 #endif // QUEUE_H
-
