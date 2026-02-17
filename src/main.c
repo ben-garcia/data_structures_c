@@ -2,6 +2,7 @@
 #include "include/dynamic_array.h"
 #include "include/hash_table.h"
 #include "include/linked_list.h"
+#include "include/priority_queue.h"
 #include "include/queue.h"
 #include "include/stack.h"
 #include "include/string_builder.h"
@@ -10,15 +11,57 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Return the size of array 'n'
+#define GET_ARRAY_SIZE(n) ((int)((sizeof((n))) / (sizeof((n)[0]))))
+
+typedef struct student {
+  char *name;
+  float gpa;
+  int id;
+} student;
+
 void free_function(void **item) { free(*item); }
 void free_long(void *data) { free(data); }
 int comparefn(const void *a, const void *b) { return *(long *)a - *(long *)b; }
+// Comparison function that uses student.gpa to determine priority
+// and use student.name for duplicates.
+// This function makes the priority_queue a max heap that follows FIFO.
+int student_comparefn(const void *a, const void *b) {
+  student s1 = *(student *)a;
+  student s2 = *(student *)b;
+
+  if (s1.gpa == s2.gpa) {
+    int result = strcmp(s1.name, s2.name);
+    // uncomment to remove the last element added first.
+    // if (result > 0) return 1;
+    // else if (result < 0) return -1;
+    if (result < 0) {
+      return 1;
+    } else if (result > 0) {
+      return -1;
+    }
+    return 0;
+  }
+
+  float result = s1.gpa - s2.gpa;
+  // uncomment to convert to max heap.
+  // if (result < 0)
+  //   return -1;
+  // else if (result > 0)
+  //   return 1;
+  if (result > 0) {
+    return -1;
+  } else if (result < 0) {
+    return 1;
+  }
+  return 0;
+}
 
 int main(void) {
   // dynamic array of longs
   dynamic_array *numbers;
   dynamic_array_create(&numbers, sizeof(long), free_function, NULL);
-  for (long i = 1; i <= 100; i++) {
+  for (long i = 1; i <= 10; i++) {
     long *num = malloc(sizeof(long));
     *num = i;
     dynamic_array_add(numbers, num);
@@ -190,6 +233,58 @@ int main(void) {
 
   printf("\n");
 
+  printf("============MIN priority queue============\n");
+  student max_pqueue_data[] = {
+      {"foo1", 3.1f, 1},   {"bar1", 4.0f, 2}, {"baz1", 3.9f, 3},
+      {"bar2", 4.0f, 4},   {"baz2", 3.9f, 5}, {"foo2", 3.1f, 6},
+      {"foobaz", 1.9f, 7}, {"bar3", 4.0f, 8}, {"foobar", 1.1f, 9}};
+  priority_queue *max_pqueue;
+
+  priority_queue_create(&max_pqueue, student_comparefn, NULL);
+
+  for (int i = 0; i < GET_ARRAY_SIZE(max_pqueue_data); i++) {
+    printf("inserting {name: %s, gpa: %.2f, id: %d}\n", max_pqueue_data[i].name,
+           max_pqueue_data[i].gpa, max_pqueue_data[i].id);
+    priority_queue_insert(max_pqueue, &max_pqueue_data[i]);
+  }
+
+  printf("\n");
+
+  while (priority_queue_is_empty(max_pqueue) != 0) {
+    student *data;
+    priority_queue_peek(max_pqueue, (void **)&data);
+    printf("deleting {name: %s, gpa: %.2f, id: %d}\n", data->name, data->gpa,
+           data->id);
+    priority_queue_delete(max_pqueue);
+  }
+
+  printf("\n");
+
+  printf("============MAX priority queue============\n");
+  long min_pqueue_data[] = {9, 8, 2, 3, 4, 5, 6, 7, 5};
+  priority_queue *min_pqueue;
+
+  priority_queue_create(&min_pqueue, NULL, free_long);
+
+  printf("inserting... ");
+  for (int i = 0; i < GET_ARRAY_SIZE(min_pqueue_data); i++) {
+    printf("%ld ", min_pqueue_data[i]);
+    long *long_ptr = malloc(sizeof(long));
+    *long_ptr = min_pqueue_data[i];
+    priority_queue_insert(min_pqueue, long_ptr);
+  }
+
+  printf("\ndeleting... ");
+
+  while (priority_queue_is_empty(min_pqueue) != 0) {
+    long *data;
+    priority_queue_peek(min_pqueue, (void **)&data);
+    printf(" %ld", *data);
+    priority_queue_delete(min_pqueue);
+  }
+
+  printf("\n");
+
   // de-allocate
   dynamic_array_destroy(&numbers);
   dynamic_array_destroy(&strings);
@@ -207,6 +302,8 @@ int main(void) {
   free(view2_buffer);
   stack_destroy(&my_stack);
   queue_destroy(&my_queue);
+  priority_queue_destroy(&min_pqueue);
+  priority_queue_destroy(&max_pqueue);
 
   return 0;
 }
