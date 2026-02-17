@@ -7,16 +7,18 @@ typedef struct queue_node {
 } queue_node;
 
 struct queue {
-  queue_node *head; // front of the queue
-  queue_node *tail; // end of the queue
+  queue_node *head;           // front of the queue
+  queue_node *tail;           // end of the queue
+  void (*freefn)(void *data); // deallocation function for custom data types
   unsigned int size;
 };
 
-int queue_create(queue **q) {
+int queue_create(queue **q, void (*freefn)(void *data)) {
   if (((*q) = malloc(sizeof(queue))) == NULL) {
     return 1;
   }
 
+  (*q)->freefn = freefn;
   (*q)->head = NULL;
   (*q)->tail = NULL;
   (*q)->size = 0;
@@ -72,6 +74,11 @@ int queue_dequeue(queue *q) {
   queue_node *temp = q->head;
 
   q->head = q->head->next;
+
+  if (q->freefn != NULL) {
+    q->freefn(temp->data);
+  }
+
   free(temp);
   q->size--;
 
@@ -101,7 +108,7 @@ int queue_peek_back(queue *q, void **data) {
     return 1;
   }
 
-  *data =  q->tail->data;
+  *data = q->tail->data;
 
   return 0;
 }
@@ -123,7 +130,12 @@ int queue_destroy(queue **q) {
 
   while (current != NULL) {
     queue_node *temp = current;
+
     current = current->next;
+    if ((*q)->freefn != NULL) {
+      (*q)->freefn(temp->data);
+    }
+
     free(temp);
   }
 

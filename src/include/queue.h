@@ -7,9 +7,10 @@ typedef struct queue queue;
  * @brief Allocate resource and setup
  *
  * @param q the queue to initialize
+ * @param freefn deallocation function for custom data type
  * @return 0 on success, 1 otherwise
  */
-int queue_create(queue **q);
+int queue_create(queue **q, void (*freefn)(void *data));
 
 /**
  * @brief Insert 'data' in end/tail of the queue

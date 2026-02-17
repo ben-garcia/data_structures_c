@@ -220,7 +220,7 @@ int main(void) {
   char *queue_data[] = {"q", "u", "e", "u", "e"};
   queue *my_queue;
 
-  queue_create(&my_queue);
+  queue_create(&my_queue, NULL);
 
   for (int i = 0; i < 5; i++) {
     printf("enqueing %s\n", queue_data[i]);
