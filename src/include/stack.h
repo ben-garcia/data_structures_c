@@ -21,12 +21,13 @@ int stack_create(stack **s);
 int stack_push(stack *s, void *data);
 
 /**
- * @brief Delete the item from the top of the stack
+ * @brief Remove the item from the top of the stack
  *
  * @param s the stack to modify 
- * @return the data from the deleted node
+ * @param the data from the deleted node
+ * @return 0 on success, 1 otherwise
  */
-void *stack_pop(stack *s);
+int stack_pop(stack *s, void **data);
 
 /**
  * @brief Return the size of the stack 
