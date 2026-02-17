@@ -210,7 +210,8 @@ int main(void) {
 
   while (stack_is_empty(my_stack) != 0) {
     void *data;
-    stack_pop(my_stack, &data);
+    stack_peek(my_stack, &data);
+    stack_pop(my_stack);
     printf("poping %s\n", (char*)data);
   }
 

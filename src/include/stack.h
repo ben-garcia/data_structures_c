@@ -25,10 +25,9 @@ int stack_push(stack *s, void *data);
  * @brief Remove the item from the top of the stack
  *
  * @param s the stack to modify 
- * @param the data from the deleted node
  * @return 0 on success, 1 otherwise
  */
-int stack_pop(stack *s, void **data);
+int stack_pop(stack *s);
 
 /**
  * @brief Return the size of the stack 

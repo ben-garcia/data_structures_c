@@ -63,34 +63,22 @@ int stack_push(stack *s, void *data) {
   return 0;
 }
 
-int stack_pop(stack *s, void **data) {
+int stack_pop(stack *s) {
   if (s == NULL || s->head == NULL) {
     return 1; // s must be defined and size > 0
   }
 
   stack_node *node = s->head;
 
-  // if (s->size == 1) {
-  //   void *temp = node->data;
-  //   s->head = NULL;
-  //   s->size--;
-  //   if (s->freefn != NULL) {
-  //     s->freefn(node->data);
-  //   }
-  //   free(node);
-  //   *data = temp;
-  //   return 0;
-  // }
-
-  void *temp = node->data;
   s->head = node->next;
   s->size--;
+
   if (s->freefn != NULL) {
     s->freefn(node->data);
   }
+
   free(node);
 
-  *data = temp;
   return 0;
 }
 
@@ -120,9 +108,11 @@ int stack_destroy(stack **s) {
   while (current != NULL) {
     stack_node *node = current;
     current = current->next;
+
     if((*s)->freefn != NULL) {
       (*s)->freefn(node->data);
     }
+
     free(node);
   }
 
