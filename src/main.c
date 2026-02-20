@@ -1,4 +1,6 @@
+#include "include/arena.h"
 #include "include/avl_tree.h"
+#include "include/deque.h"
 #include "include/dynamic_array.h"
 #include "include/hash_table.h"
 #include "include/linked_list.h"
@@ -8,6 +10,7 @@
 #include "include/string_builder.h"
 #include "include/string_view.h"
 
+#include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -57,7 +60,26 @@ int student_comparefn(const void *a, const void *b) {
   return 0;
 }
 
+void init(arena *a, void *arr[], unsigned int length) {
+  for (unsigned int i = 0; i < length - 1; i++) {
+    if ((arr[i] = arena_alloc(a, sizeof(student), alignof(student))) == NULL) {
+      printf("=========================breaking at %d\n", i);
+      break;
+    }
+    ((student *)(arr[i]))->id = i;
+    ((student *)(arr[i]))->gpa = (float)i + 0.14;
+  }
+}
+
 int main(void) {
+  // arena *permanent_arena;
+  // arena_create(&permanent_arena, MB(4));
+  // const unsigned int LENGTH = 300000;
+  // void *arr[LENGTH];
+  // init(permanent_arena, arr, LENGTH);
+  //
+  // arena_destroy(&permanent_arena);
+
   // dynamic array of longs
   dynamic_array *numbers;
   dynamic_array_create(&numbers, sizeof(long), free_function, NULL);
@@ -212,7 +234,7 @@ int main(void) {
     void *data;
     stack_peek(my_stack, &data);
     stack_pop(my_stack);
-    printf("poping %s\n", (char*)data);
+    printf("poping %s\n", (char *)data);
   }
 
   printf("\n");
@@ -232,7 +254,7 @@ int main(void) {
 
   while (queue_is_empty(my_queue) != 0) {
     void *data;
-    queue_peek_front(my_queue, &data);
+    queue_peek(my_queue, &data);
     printf("dequeing %c\n", *(char *)data);
     queue_dequeue(my_queue);
   }
@@ -249,7 +271,8 @@ int main(void) {
   priority_queue_create(&max_pqueue, student_comparefn, NULL);
 
   for (int i = 0; i < GET_ARRAY_SIZE(max_pqueue_data); i++) {
-    printf("inserting {name: %s, gpa: %.2f, id: %d}\n", max_pqueue_data[i].name,
+    printf("inserting {name: %s, gpa: %.2f, id: %d}\n",
+    max_pqueue_data[i].name,
            max_pqueue_data[i].gpa, max_pqueue_data[i].id);
     priority_queue_insert(max_pqueue, &max_pqueue_data[i]);
   }
@@ -291,6 +314,44 @@ int main(void) {
 
   printf("\n");
 
+
+  printf("==============deque================\n");
+
+  char *deque_data[] = {"e", "u", "q", "e", "d", "e", "u", "q", "e", "d"};
+  deque *my_deque;
+  deque_create(&my_deque, NULL);
+
+  printf("adding to the back... ");
+  for (int i = 0; i < 5; i++) {
+    printf("%s ", deque_data[i]);
+    deque_add_back(my_deque, deque_data[i]);
+  }
+
+  printf("\nadding to the front... ");
+  for (int i = 5; i < 10; i++) {
+    printf("%s ", deque_data[i]);
+    deque_add_front(my_deque, deque_data[i]);
+  }
+
+  printf("\nremoving from the front... ");
+  for(int i = 0; i < 5; i++) {
+    char *data;
+    deque_peek_front(my_deque, (void **)&data);
+    printf("%s ", data);
+    deque_remove_front(my_deque);
+  }
+
+  printf("\nremoving from the back... ");
+  for(int i = 5; i < 10; i++) {
+    char *data;
+    deque_peek_back(my_deque, (void **)&data);
+    printf("%s ", data);
+    deque_remove_back(my_deque);
+  }
+
+  printf("\n");
+
+  deque_destroy(&my_deque);
   // de-allocate
   dynamic_array_destroy(&numbers);
   dynamic_array_destroy(&strings);
