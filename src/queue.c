@@ -93,22 +93,12 @@ int queue_is_empty(queue *q) {
   return !(q->size == 0);
 }
 
-int queue_peek_front(queue *q, void **data) {
-  if (queue_is_empty(q) == 0) {
+int queue_peek(queue *q, void **data) {
+  if (q->size == 0) {
     return 1;
   }
 
   *data = q->head->data;
-
-  return 0;
-}
-
-int queue_peek_back(queue *q, void **data) {
-  if (queue_is_empty(q) == 0) {
-    return 1;
-  }
-
-  *data = q->tail->data;
 
   return 0;
 }

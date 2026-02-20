@@ -36,22 +36,13 @@ int queue_dequeue(queue *q);
  * @param data the buffer to store the data at the front/head of the queue
  * @return 0 on success, 1 otherwise
  */
-int queue_peek_front(queue *q, void **data);
-
-/**
- * @brief Return the data at the back/tail wihtout modifying the queue
- *
- * @param q the queue
- * @param data the buffer to store the data at back/tail of the queue
- * @return 0 on success, 1 otherwise
- */
-int queue_peek_back(queue *q, void **data);
+int queue_peek(queue *q, void **data);
 
 /**
  * @brief Return the size of the queue
  *
  * @param q the queue
- * @return the size of the queue
+ * @return the size of the queue, -1 otherwise
  */
 int queue_get_size(queue *q);
 
