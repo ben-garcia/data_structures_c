@@ -1,6 +1,9 @@
 #include "include/priority_queue.h"
-#include <stdlib.h>
+#include <stdalign.h>
 #include <string.h>
+
+#define TRUE 1
+#define FALSE 0
 
 // These functions return the largest integral value that is not greater than n.
 // For example, FLOOR(0.5) is 0.0, and FLOOR(-0.5) is -1.0.
@@ -49,8 +52,9 @@ struct priority_queue {
    * }
    */
   void (*freefn)(void *data); // deallaction function
-  unsigned int capacity;      // current limit of items
-  unsigned int size;          // elements of items
+  arena *arena;
+  unsigned int capacity; // current limit of items
+  unsigned int size;     // elements of items
 };
 
 /**
@@ -62,15 +66,11 @@ struct priority_queue {
 static int resize(priority_queue **pq) {
   unsigned int old_capacity = (*pq)->capacity;
 
-  if (((*pq)->items = realloc(
-           (*pq)->items, sizeof(void *) * ((*pq)->capacity <<= 1))) == NULL) {
+  if (((*pq)->items = arena_realloc(
+           (*pq)->arena, (*pq)->items, old_capacity * sizeof(void *),
+           sizeof(void *) * ((*pq)->capacity <<= 1), FALSE)) == NULL) {
     return 1;
   }
-
-  // since realloc doesn't zero out new space allocated,
-  // it is done manually.
-  memset((void *)(*pq)->items + (old_capacity * sizeof(void *)), 0,
-         (*pq)->capacity - old_capacity);
 
   return 0;
 }
@@ -151,19 +151,22 @@ static int build_max_heap(const void *a, const void *b) {
   return *(long *)a - *(long *)b;
 }
 
-int priority_queue_create(priority_queue **pq,
+int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
                           int (*comparefn)(const void *a, const void *b),
-                          void (*freefn)(void *data)) {
-  if (((*pq) = malloc(sizeof(priority_queue))) == NULL) {
+                          void (*freefn)(void *data), arena *arena) {
+  if (((*pq) = arena_alloc(arena, sizeof(priority_queue),
+                           alignof(priority_queue), FALSE)) == NULL) {
     return 1;
   }
 
+  (*pq)->capacity = (initial_capacity <= 0) ? 16 : initial_capacity;
+  (*pq)->arena = arena;
   (*pq)->comparefn = comparefn == NULL ? build_max_heap : comparefn;
   (*pq)->freefn = freefn;
-  (*pq)->capacity = 16;
   (*pq)->size = 0;
 
-  if ((((*pq)->items) = calloc((*pq)->capacity, sizeof(void *))) == NULL) {
+  if ((((*pq)->items) = arena_alloc(arena, (*pq)->capacity * sizeof(void *),
+                                    alignof(void *), 1)) == NULL) {
     return 1;
   }
 
@@ -233,10 +236,6 @@ int priority_queue_destroy(priority_queue **pq) {
       (*pq)->freefn((*pq)->items[i]);
     }
   }
-
-  free((*pq)->items);
-  free(*pq);
-  *pq = NULL;
 
   return 0;
 }
