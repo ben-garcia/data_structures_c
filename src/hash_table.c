@@ -1,9 +1,13 @@
 #include "include/hash_table.h"
+#include "include/utils.h"
 
-#include <stdlib.h>
+#include <stdalign.h>
 #include <string.h>
+#include <stdio.h>
 
 #define HASH_TABLE_LOAD_FACTOR 0.75
+#define TRUE 1
+#define FALSE 0
 
 struct hash_table_entry {
   char *key;
@@ -12,11 +16,13 @@ struct hash_table_entry {
 
 struct hash_table {
   hash_table_entry *entries; // array of entries
-  unsigned int (*hashfn)(const char *, unsigned int); // function to generate hash code
-  void (*freefn)(void **); // function to deallocate each entry
-  unsigned size; // number of entries
-  unsigned capacity; // number of buckets
-  unsigned data_size; // sizeo of each item in the buckets
+  unsigned int (*hashfn)(const char *,
+                         unsigned int); // function to generate hash code
+  void (*freefn)(void **);              // function to deallocate each entry
+  arena *arena;                         // memory block for allocations
+  unsigned size;                        // number of entries
+  unsigned int capacity;                // number of buckets
+  unsigned int data_size;               // sizeo of each item in the buckets
 };
 
 struct hash_table_iterator {
@@ -91,7 +97,9 @@ find_entry(hash_table_entry *entries, unsigned int capacity, const char *key,
  * @param capacity the new capacity.
  */
 static void resize(hash_table *ht, int capacity) {
-  hash_table_entry *new_entries = malloc(capacity * sizeof(hash_table_entry));
+  hash_table_entry *new_entries =
+      arena_alloc(ht->arena, capacity * sizeof(hash_table_entry),
+                  alignof(hash_table_entry), FALSE);
 
   for (int i = 0; i < capacity; i++) {
     new_entries[i].key = NULL;
@@ -115,22 +123,28 @@ static void resize(hash_table *ht, int capacity) {
     ht->size++;
   }
 
-  free(ht->entries);
+  // free(ht->entries);
 
   ht->entries = new_entries;
   ht->capacity = capacity;
 }
 
-int hash_table_create(hash_table **ht, unsigned int data_size,
+int hash_table_create(hash_table **ht, unsigned int initial_capacity,
+                      unsigned int data_size,
                       unsigned int (*hashfn)(const char *, unsigned int),
-                      void (*freefn)(void **)) {
-  if ((*ht = malloc(sizeof(hash_table))) == NULL) {
+                      void (*freefn)(void **), arena *arena) {
+  ASSERT(arena != NULL, "arena MUST be provided");
+
+  if ((*ht = arena_alloc(arena, sizeof(hash_table), alignof(hash_table),
+                         FALSE)) == NULL) {
     return 1;
   }
 
+  (*ht)->arena = arena;
   (*ht)->data_size = data_size;
   (*ht)->size = 0;
-  (*ht)->capacity = 16; // initial capacity
+  (*ht)->capacity =
+      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
   (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
   (*ht)->freefn = freefn;
   (*ht)->entries = NULL;
@@ -140,8 +154,9 @@ int hash_table_create(hash_table **ht, unsigned int data_size,
 
 int hash_table_get_size(hash_table *ht) {
   if (ht == NULL) {
-    return 1;
+    return -1;
   }
+
   return ht->size;
 }
 
@@ -151,7 +166,9 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value) {
   }
 
   if (ht->size == 0) {
-    ht->entries = malloc(ht->capacity * sizeof(hash_table_entry));
+    ht->entries =
+        arena_alloc(ht->arena, ht->capacity * sizeof(hash_table_entry),
+                    alignof(hash_table_entry), FALSE);
 
     // Setting keys and values to NULL indicates the position is empty. As
     // opposed to a tombstone.
@@ -180,12 +197,14 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value) {
     ht->size++;
   }
 
-  entry->key = malloc(sizeof(char) * (key_length + 1));
+  entry->key = arena_alloc(ht->arena, sizeof(char) * (key_length + 1),
+                           alignof(char), FALSE);
   strcpy(entry->key, key);
   entry->key[key_length] = '\0';
 
   if (ht->freefn == NULL) {
-    entry->value = malloc(ht->data_size);
+    entry->value =
+        arena_alloc(ht->arena, ht->data_size, alignof(void *), FALSE);
     memcpy(entry->value, value, ht->data_size);
   } else {
     // Indicates user is responsible for allocate/deallocate memory.
@@ -202,7 +221,9 @@ int hash_table_insert_and_replace(hash_table *ht, const char *key,
   }
 
   if (ht->size == 0) {
-    ht->entries = malloc(ht->capacity * sizeof(hash_table_entry));
+    ht->entries =
+        arena_alloc(ht->arena, ht->capacity * sizeof(hash_table_entry),
+                    alignof(hash_table_entry), FALSE);
 
     // Setting keys and values to NULL indicates the position is empty. As
     // opposed to a tombstone.
@@ -225,12 +246,14 @@ int hash_table_insert_and_replace(hash_table *ht, const char *key,
   if (is_new_key) {
     ht->size++;
 
-    entry->key = malloc(sizeof(char) * (key_length + 1));
+    entry->key = arena_alloc(ht->arena, sizeof(char) * (key_length + 1),
+                             alignof(char), FALSE);
     strcpy(entry->key, key);
     entry->key[key_length] = '\0';
 
     if (ht->freefn == NULL) {
-      entry->value = malloc(ht->data_size);
+      entry->value =
+          arena_alloc(ht->arena, ht->data_size, alignof(void *), FALSE);
       memcpy(entry->value, value, ht->data_size);
     } else {
       // Indicates user is responsible for allocate/deallocate memory.
@@ -295,10 +318,8 @@ int hash_table_delete(hash_table *ht, const char *key) {
 
   ht->size--;
 
-  free(entry->key);
   entry->key = NULL;
 
-  free(entry->value);
   // entry value of 1 means the entry is a tombstone .
   entry->value = (void *)1;
 
@@ -330,28 +351,18 @@ int hash_table_destroy(hash_table **ht) {
     // Deallocation only occurs for a previously created hash table.
     // When the hash table is empty.
     if ((*ht)->size == 0) {
-      free(*ht);
-      *ht = NULL;
       return 1;
     }
   }
 
   for (unsigned int i = 0; i < (*ht)->capacity; i++) {
     if ((*ht)->entries[i].key != NULL && (*ht)->entries[i].value != NULL) {
-      free((*ht)->entries[i].key);
 
       if ((*ht)->freefn != NULL) {
         (*ht)->freefn(&(*ht)->entries[i].value);
-      } else {
-        free((*ht)->entries[i].value);
       }
     }
   }
-
-  free((*ht)->entries);
-  (*ht)->entries = NULL;
-  free(*ht);
-  *ht = NULL;
 
   return 0;
 }
@@ -361,7 +372,10 @@ int hash_table_iterator_create(hash_table_iterator **it, hash_table *ht) {
     return 1;
   }
 
-  if (((*it) = malloc(sizeof(hash_table_iterator))) == NULL) {
+  ASSERT(ht->arena != NULL, "arena MUST be provided");
+
+  if (((*it) = arena_alloc(ht->arena, sizeof(hash_table_iterator),
+                           alignof(hash_table_iterator), FALSE)) == NULL) {
     return 1;
   }
 
@@ -373,7 +387,8 @@ int hash_table_iterator_create(hash_table_iterator **it, hash_table *ht) {
   return 0;
 }
 
-int hash_table_iterator_next(hash_table_iterator *it, hash_table_entry **entry) {
+int hash_table_iterator_next(hash_table_iterator *it,
+                             hash_table_entry **entry) {
   if (it == NULL || it->size == 0 || it->index > it->capacity - 1) {
     return 1;
   }
@@ -403,17 +418,6 @@ int hash_table_iterator_reset(hash_table_iterator *it) {
   }
 
   it->index = 0;
-
-  return 0;
-}
-
-int hash_table_iterator_destroy(hash_table_iterator **it) {
-  if (*it == NULL) {
-    return 1;
-  }
-
-  free(*it);
-  *it = NULL;
 
   return 0;
 }

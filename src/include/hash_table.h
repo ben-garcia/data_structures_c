@@ -1,6 +1,8 @@
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
+#include "arena.h"
+
 typedef struct hash_table_entry hash_table_entry;
 typedef struct hash_table hash_table;
 typedef struct hash_table_iterator hash_table_iterator;
@@ -9,20 +11,23 @@ typedef struct hash_table_iterator hash_table_iterator;
  * Allocate necessary resources and setup.
  *
  * @param ht hash_table to create.
+ * @param initial_capacity number of buckets before resizing
  * @param data_size size in bytes of each value stored.
  * @param hashfn hashing function, if set to NULL FNV-1a  is used.
  * @param freefn function used to deallocate user defined struct.
+ * @param arena memory block for all allocations
  * @return 0 on success, 1 otherwise
  */
-int hash_table_create(hash_table **ht, unsigned int data_size,
+int hash_table_create(hash_table **ht, unsigned int initial_capacity,
+                      unsigned int data_size,
                       unsigned int (*hashfn)(const char *, unsigned int),
-                      void (*freefn)(void **));
+                      void (*freefn)(void **), arena *arena);
 
 /**
  * Retrive the number of entries in the hash table.
  *
  * @param ht the hash table to access.
- * @return 0 on success, 1 otherwise
+ * @return -1 on erorr, number of entries otherwise
  */
 int hash_table_get_size(hash_table *ht);
 
@@ -130,13 +135,5 @@ int hash_table_iterator_next(hash_table_iterator *it, hash_table_entry **entry);
  * @return 0 on success, 1 otherwise
  */
 int hash_table_iterator_reset(hash_table_iterator *it);
-
-/**
- * Deallocate and set to NULL.
- *
- * @param it hash table iterator to deallocate.
- * @return 0 on success, 1 otherwise
- */
-int hash_table_iterator_destroy(hash_table_iterator **it);
 
 #endif // HASH_TABLE_H
