@@ -1,12 +1,20 @@
 #include "include/arena.h"
 #include <string.h>
 
-#define IS_POWER_OF_TWO(n) (((uint64_t)(n) & ((uint64_t)(n) - 1)) == 0)
+#define IS_POWER_OF_TWO(n) !(((uint64_t)(n) & ((uint64_t)(n) - 1)) == 0)
 /**
  * Aligns 'n' up to the nearest 'p'(power of 2).
  */
 #define ALIGN_UP_POW2(n, p)                                                    \
   (((uint64_t)(n) + ((uint64_t)(p) - 1)) & (~((uint64_t)(p) - 1)))
+
+struct arena {
+  uint8_t *base_ptr;       // pointer to the start of the reserved size
+  uint64_t reserved_size;  // max size of the block of memory
+  uint64_t committed_size; // size of physical memory
+  uint64_t offset;         // bump pointer
+  uint64_t scratch_offset; // store the offset for scratch arena
+};
 
 /**
  * Get the size of a block of virtual memory from the OS.
@@ -23,7 +31,7 @@ static void *align_forward(uint8_t *address, uint64_t alignment) {
 
   // Ensure alignment is a power of 2
   // if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
-  if (alignment == 0 || !IS_POWER_OF_TWO(alignment)) {
+  if (alignment == 0 || IS_POWER_OF_TWO(alignment) != 0) {
     return NULL; // Invalid alignment
   }
 
@@ -34,39 +42,37 @@ static void *align_forward(uint8_t *address, uint64_t alignment) {
   return (void *)aligned_addr; // Cast back to void pointer
 }
 
-arena *arena_create(size_t reserve_size) {
-  arena *a = malloc(sizeof(arena));
-  if (a == NULL) {
-    return NULL;
+int arena_create(arena **a, size_t reserve_size) {
+  if (((*a) = malloc(sizeof(arena))) == NULL) {
+    return 1;
   }
 
   const size_t page_size = get_page_size();
 
-  // TODO: delete me
-  uint64_t deleteme = ALIGN_UP_POW2(reserve_size, page_size);
-  (void)deleteme;
   /// Align reservation up to the nearest page size
   // Align to a page boundary
-  reserve_size = (reserve_size + page_size - 1) / page_size * page_size;
+  reserve_size = ALIGN_UP_POW2(reserve_size, page_size);
 
   // Reserve the Virtual Memory Area but does not alloate phsycial memory.
-  void *block =
-      mmap(NULL, reserve_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (block == MAP_FAILED) {
-    free(a);
-    return NULL;
+  void *block;
+  if ((block = mmap(NULL, reserve_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
+                    -1, 0)) == MAP_FAILED) {
+    free(*a);
+    return 1;
   }
 
-  a->base_ptr = (uint8_t *)block;
-  a->reserved_size = reserve_size;
-  a->committed_size = 0;
-  a->offset = 0;
+  (*a)->base_ptr = (uint8_t *)block;
+  (*a)->reserved_size = reserve_size;
+  (*a)->committed_size = 0;
+  (*a)->offset = 0;
+  (*a)->scratch_offset = 0;
 
-  return a;
+  return 0;
 }
 
-void *arena_alloc(arena *a, uint64_t size, uint64_t alignment) {
-  if (a == NULL || size == 0) {
+void *arena_alloc(arena *a, uint64_t size, uint64_t alignment,
+                  unsigned int zero_out) {
+  if (a == NULL || size <= 0 || IS_POWER_OF_TWO(alignment) != 0) {
     return NULL;
   }
 
@@ -81,11 +87,8 @@ void *arena_alloc(arena *a, uint64_t size, uint64_t alignment) {
 
   // check Virutal Memory Area has been commited.
   if (new_offset > a->committed_size) {
-    uint64_t deleteme = ALIGN_UP_POW2(new_offset, page_size);
-    (void)deleteme;
     // Align the required commit size up to nearest page
-    size_t new_commit_target =
-        (new_offset + page_size - 1) / page_size * page_size;
+    size_t new_commit_target = ALIGN_UP_POW2(new_offset, page_size);
     // Clamp to the reservation limit
     if (new_commit_target > a->reserved_size) {
       new_commit_target = a->reserved_size;
@@ -106,37 +109,68 @@ void *arena_alloc(arena *a, uint64_t size, uint64_t alignment) {
   void *memory = a->base_ptr + a->offset;
   a->offset = new_offset;
 
+  if (zero_out == 1) {
+    memset(memory, 0, size);
+  }
+
   return memory;
 }
 
-void *arena_realloc(arena *a, uint8_t *old_ptr, size_t new_size) {
-  if (new_size == 0 || new_size > a->reserved_size) {
+void *arena_realloc(arena *a, void *old_ptr, const size_t old_size,
+                    const size_t new_size, unsigned int zero_out) {
+  if ((new_size == 0) || ((a->offset + new_size) > a->reserved_size)) {
     return NULL; // out of space
   }
 
-  const size_t old_size = a->offset;
-  void *memory = a->base_ptr + new_size; 
+  void *memory = a->base_ptr + (a->offset + new_size);
 
   memcpy(memory, old_ptr, old_size);
+
+  if (zero_out == 1) {
+    memset(memory, 0, old_size);
+  }
 
   return memory;
 }
 
-void arena_reset(arena *a) { a->offset = 0; }
+int arena_start_scratch_arena(arena *a) {
+  if (a == NULL || a->committed_size == 0) {
+    return 1;
+  }
 
-void arena_destroy(arena *a) {
-  munmap(a->base_ptr, a->reserved_size);
-  free(a);
+  a->scratch_offset = a->offset;
+
+  return 0;
 }
 
-scratch_arena scratch_arena_create(arena *a) {
-  return (scratch_arena){.arena = a, .original_offset = a->offset};
+int arena_end_scratch_arena(arena *a) {
+  if (a == NULL || a->scratch_offset == 0) {
+    return 1;
+  }
+
+  a->offset = a->scratch_offset;
+
+  return 0;
 }
 
-void *scratch_arena_alloc(scratch_arena *sa, size_t size, uint64_t alignment) {
-  return arena_alloc((arena *)sa->arena, size, alignment);
+int arena_reset(arena *a) {
+  if (a == NULL) {
+    return 1;
+  }
+
+  a->offset = 0;
+  return 0;
 }
 
-void scratch_arena_destroy(scratch_arena *sa) {
-  sa->arena->offset = sa->original_offset;
+int arena_destroy(arena **a) {
+  if (*a == NULL) {
+    return 1;
+  }
+
+  munmap((*a)->base_ptr, (*a)->reserved_size);
+  free(*a);
+
+  *a = NULL;
+
+  return 0;
 }
