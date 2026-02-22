@@ -1,21 +1,28 @@
 #include "include/string_builder.h"
 #include "include/dynamic_array.h"
 
+#include <stdalign.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define FALSE 0
+
 struct string_builder {
   dynamic_array *string; // string being built
+  arena *arena;          // memory block used for allocations
 };
 
-int string_builder_create(string_builder **sb) {
-  if (((*sb) = malloc(sizeof(string_builder))) == NULL) {
+int string_builder_create(string_builder **sb, arena *arena) {
+  if (((*sb) = arena_alloc(arena, sizeof(string_builder),
+                           alignof(string_builder), FALSE)) == NULL) {
     return 1;
   }
 
-  return dynamic_array_create(&(*sb)->string, sizeof(char), NULL, NULL);
+  (*sb)->arena = arena;
+
+  return dynamic_array_create(&(*sb)->string, 16, sizeof(char), NULL, arena);
 }
 
 int string_builder_append(string_builder *sb, const char *str) {
@@ -43,7 +50,7 @@ int string_builder_append_fmt_str(string_builder *sb, const char *format, ...) {
 
   size = num_chars + 1; // extra byte for '\0'
 
-  if ((buffer = malloc(size)) == NULL) {
+  if ((buffer = arena_alloc(sb->arena, size, alignof(char), FALSE)) == NULL) {
     result = 1;
     goto exit;
   }
@@ -58,9 +65,6 @@ int string_builder_append_fmt_str(string_builder *sb, const char *format, ...) {
   }
 
 exit:
-  if (buffer != NULL) {
-    free(buffer);
-  }
   return result;
 }
 
@@ -69,17 +73,14 @@ int string_builder_append_view(string_builder *sb, string_view view) {
     return 1;
   }
 
-  return dynamic_array_add_many(sb->string, (void**)view.data, view.length);
+  return dynamic_array_add_many(sb->string, (void **)view.data, view.length);
 }
 
 int string_builder_build(string_builder *sb, char **buffer) {
-  if ((dynamic_array_shrink_to_fit(sb->string)) != 0) {
-    return 1;
-  }
-
   int bytes = sizeof(char) * dynamic_array_get_size(sb->string);
 
-  if (((*buffer) = malloc(bytes + 1)) == NULL) {
+  if (((*buffer) = arena_alloc(sb->arena, bytes + 1, alignof(char), FALSE)) ==
+      NULL) {
     return 1;
   }
 
@@ -94,16 +95,4 @@ int string_builder_build(string_builder *sb, char **buffer) {
 
 int string_builder_is_empty(string_builder *sb) {
   return dynamic_array_is_empty(sb->string);
-}
-
-int string_builder_destroy(string_builder **sb) {
-  if (*sb == NULL) {
-    return 1;
-  }
-  dynamic_array_destroy(&(*sb)->string);
-
-  free(*sb);
-  (*sb) = NULL;
-
-  return 0;
 }

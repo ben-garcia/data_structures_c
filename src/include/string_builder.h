@@ -1,6 +1,7 @@
 #ifndef STRING_BUILDER_H
 #define STRING_BUILDER_H
 
+#include "arena.h"
 #include "string_view.h"
 
 /*
@@ -14,9 +15,10 @@ typedef struct string_builder string_builder;
  * Allocate necessary resources and setup.
  *
  * @param sb string_builder to create.
+ * @param arena memory block for allocations 
  * @return 0 on success, 1 otherwise
  */
-int string_builder_create(string_builder **sb);
+int string_builder_create(string_builder **sb, arena *arena);
 
 /**
  * @brief Append a string to the string builder.
@@ -54,13 +56,13 @@ int string_builder_append_fmt_str(string_builder *sb,
  * @param view string_view to add
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append_view(string_builder *sb, string_view view);
+int string_builder_append_view(string_builder *sb, const string_view view);
 
 /**
  * @brief Build string.
  *
  * @param sb string_builder to access.
- * @param buffer where to copy the string.
+ * @param buffer where to store the newly created string.
  * @return 0 on success, 1 otherwise
  */
 int string_builder_build(string_builder *sb, char **buffer);
@@ -72,13 +74,5 @@ int string_builder_build(string_builder *sb, char **buffer);
  * @return 0 on success, 1 otherwise.
  */
 int string_builder_is_empty(string_builder *sb);
-
-/**
- * @brief Deallocate and set to NULL.
- *
- * @param sb string_builder to deallocate.
- * @return 0 on success, 1 otherwise
- */
-int string_builder_destroy(string_builder **sb);
 
 #endif // STRING_BUILDER_H
