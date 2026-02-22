@@ -14,14 +14,13 @@ typedef struct hash_table_iterator hash_table_iterator;
  * @param initial_capacity number of buckets before resizing
  * @param data_size size in bytes of each value stored.
  * @param hashfn hashing function, if set to NULL FNV-1a  is used.
- * @param freefn function used to deallocate user defined struct.
  * @param arena memory block for all allocations
  * @return 0 on success, 1 otherwise
  */
 int hash_table_create(hash_table **ht, unsigned int initial_capacity,
                       unsigned int data_size,
                       unsigned int (*hashfn)(const char *, unsigned int),
-                      void (*freefn)(void **), arena *arena);
+                      arena *arena);
 
 /**
  * Retrive the number of entries in the hash table.
@@ -97,14 +96,6 @@ int hash_table_get_entry_key(hash_table_entry *entry, char **key);
  * @return 0 on success, 1 otherwise
  */
 int hash_table_get_entry_value(hash_table_entry *entry, void **value);
-
-/**
- * De-allocate and set to NULL.
- *
- * @param ht hash_table to deallocate.
- * @return 0 on success, 1 otherwise
- */
-int hash_table_destroy(hash_table **ht);
 
 /**
  * Allocate necessary resources and setup.

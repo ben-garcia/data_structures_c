@@ -2,8 +2,8 @@
 #include "include/utils.h"
 
 #include <stdalign.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #define HASH_TABLE_LOAD_FACTOR 0.75
 #define TRUE 1
@@ -18,7 +18,6 @@ struct hash_table {
   hash_table_entry *entries; // array of entries
   unsigned int (*hashfn)(const char *,
                          unsigned int); // function to generate hash code
-  void (*freefn)(void **);              // function to deallocate each entry
   arena *arena;                         // memory block for allocations
   unsigned size;                        // number of entries
   unsigned int capacity;                // number of buckets
@@ -132,7 +131,7 @@ static void resize(hash_table *ht, int capacity) {
 int hash_table_create(hash_table **ht, unsigned int initial_capacity,
                       unsigned int data_size,
                       unsigned int (*hashfn)(const char *, unsigned int),
-                      void (*freefn)(void **), arena *arena) {
+                      arena *arena) {
   ASSERT(arena != NULL, "arena MUST be provided");
 
   if ((*ht = arena_alloc(arena, sizeof(hash_table), alignof(hash_table),
@@ -146,7 +145,6 @@ int hash_table_create(hash_table **ht, unsigned int initial_capacity,
   (*ht)->capacity =
       (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
   (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
-  (*ht)->freefn = freefn;
   (*ht)->entries = NULL;
 
   return 0;
@@ -201,15 +199,7 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value) {
                            alignof(char), FALSE);
   strcpy(entry->key, key);
   entry->key[key_length] = '\0';
-
-  if (ht->freefn == NULL) {
-    entry->value =
-        arena_alloc(ht->arena, ht->data_size, alignof(void *), FALSE);
-    memcpy(entry->value, value, ht->data_size);
-  } else {
-    // Indicates user is responsible for allocate/deallocate memory.
-    entry->value = (void *)value;
-  }
+  entry->value = (void *)value;
 
   return 0;
 }
@@ -250,22 +240,9 @@ int hash_table_insert_and_replace(hash_table *ht, const char *key,
                              alignof(char), FALSE);
     strcpy(entry->key, key);
     entry->key[key_length] = '\0';
-
-    if (ht->freefn == NULL) {
-      entry->value =
-          arena_alloc(ht->arena, ht->data_size, alignof(void *), FALSE);
-      memcpy(entry->value, value, ht->data_size);
-    } else {
-      // Indicates user is responsible for allocate/deallocate memory.
-      entry->value = value;
-    }
+    entry->value = value;
   } else {
-    if (ht->freefn == NULL) {
-      memcpy(entry->value, value, ht->data_size);
-    } else {
-      ht->freefn(&entry->value);
-      entry->value = value;
-    }
+    entry->value = value;
   }
 
   return 0;
@@ -343,27 +320,6 @@ int hash_table_get_entry_value(hash_table_entry *entry, void **value) {
   }
 
   *value = entry->value;
-  return 0;
-}
-
-int hash_table_destroy(hash_table **ht) {
-  if (*ht == NULL) {
-    // Deallocation only occurs for a previously created hash table.
-    // When the hash table is empty.
-    if ((*ht)->size == 0) {
-      return 1;
-    }
-  }
-
-  for (unsigned int i = 0; i < (*ht)->capacity; i++) {
-    if ((*ht)->entries[i].key != NULL && (*ht)->entries[i].value != NULL) {
-
-      if ((*ht)->freefn != NULL) {
-        (*ht)->freefn(&(*ht)->entries[i].value);
-      }
-    }
-  }
-
   return 0;
 }
 
