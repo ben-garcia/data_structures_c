@@ -14,8 +14,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define FALSE 0
+
 // Return the size of array 'n'
-#define GET_ARRAY_SIZE(n) ((int)((sizeof((n))) / (sizeof((n)[0]))))
+#define ARRAY_SIZE(n) ((int)((sizeof((n))) / (sizeof((n)[0]))))
 
 typedef struct student {
   char *name;
@@ -23,7 +25,6 @@ typedef struct student {
   int id;
 } student;
 
-void free_function(void **item) { free(*item); }
 void free_long(void *data) { free(data); }
 int comparefn(const void *a, const void *b) { return *(long *)a - *(long *)b; }
 // Comparison function that uses student.gpa to determine priority
@@ -60,48 +61,37 @@ int student_comparefn(const void *a, const void *b) {
   return 0;
 }
 
-void init(arena *a, void *arr[], unsigned int length) {
-  for (unsigned int i = 0; i < length - 1; i++) {
-    if ((arr[i] = arena_alloc(a, sizeof(student), alignof(student))) == NULL) {
-      printf("=========================breaking at %d\n", i);
-      break;
-    }
-    ((student *)(arr[i]))->id = i;
-    ((student *)(arr[i]))->gpa = (float)i + 0.14;
-  }
-}
-
 int main(void) {
-  // arena *permanent_arena;
-  // arena_create(&permanent_arena, MB(4));
-  // const unsigned int LENGTH = 300000;
-  // void *arr[LENGTH];
-  // init(permanent_arena, arr, LENGTH);
-  //
-  // arena_destroy(&permanent_arena);
+  arena *permanent_arena;
+  arena_create(&permanent_arena, MB(4));
 
-  // dynamic array of longs
+  printf("===========dynamic_array(numbers)==============\n");
   dynamic_array *numbers;
-  dynamic_array_create(&numbers, sizeof(long), free_function, NULL);
+  dynamic_array_create(&numbers, 16, sizeof(long), NULL, permanent_arena);
+
   for (long i = 1; i <= 10; i++) {
-    long *num = malloc(sizeof(long));
+    long *num =
+        arena_alloc(permanent_arena, sizeof(long), alignof(long), FALSE);
     *num = i;
     dynamic_array_add(numbers, num);
   }
+
   dynamic_array_iterator *numbers_it;
   long *value = NULL;
   dynamic_array_iterator_create(&numbers_it, numbers);
-  printf("===========dynamic_array(numbers)==============\n");
+
   while ((dynamic_array_iterator_next(numbers_it, (void **)&value)) == 0) {
     printf("%ld ", *value);
   }
+
   printf("\n\n");
 
   // string builder
   string_builder *sb;
   string_view str_view = {.data = " and Hello", .length = 10};
   char *buffer;
-  string_builder_create(&sb);
+
+  string_builder_create(&sb, permanent_arena);
   string_builder_append(sb, "Hello World!");
   string_builder_append_view(sb, str_view);
   string_builder_append_fmt_str(sb, "%s", " C!");
@@ -115,26 +105,29 @@ int main(void) {
   string_view_to_string(&view, &view_buffer);
   string_view_to_string(&view2, &view2_buffer);
 
-  // dynamic array of strings
+  printf("===========dynamic_array(strings)==============\n");
   dynamic_array *strings;
-  dynamic_array_create(&strings, sizeof(char *), NULL, NULL);
+  dynamic_array_iterator *strings_it;
+  char *str;
+
+  dynamic_array_create(&strings, 8, sizeof(char *), NULL, permanent_arena);
   dynamic_array_add(strings, buffer);
   dynamic_array_add(strings, view_buffer);
   dynamic_array_add(strings, view2_buffer);
-  dynamic_array_iterator *strings_it;
+
   dynamic_array_iterator_create(&strings_it, strings);
-  char *str;
-  printf("===========dynamic_array(strings)==============\n");
+
   while (dynamic_array_iterator_next(strings_it, (void **)&str) == 0) {
     printf("'%s'\n", str);
   }
   printf("\n");
 
-  // linked list
+  printf("===========linked_list(floats)==============\n");
   linked_list *floats;
-  linked_list_create(&floats, free_function, NULL);
+  linked_list_create(&floats, NULL, permanent_arena);
   for (float f = 0.314; f < 10; f += 0.314) {
-    float *f_ptr = malloc(sizeof(float));
+    float *f_ptr =
+        arena_alloc(permanent_arena, sizeof(float), alignof(float), FALSE);
     *f_ptr = f;
     linked_list_add(floats, f_ptr);
   }
@@ -142,33 +135,38 @@ int main(void) {
   linked_list_iterator *float_it;
   float *fvalue;
   linked_list_iterator_create(&float_it, floats);
-  printf("===========linked_list(floats)==============\n");
   while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
     printf("%f -> ", *fvalue);
   }
+
   printf("NULL\n\n");
 
+  printf("===========linked_list(floats) reversed==============\n");
   linked_list_reverse(&floats);
 
   linked_list_iterator_reset(&float_it, floats);
-  printf("===========linked_list(floats) reversed==============\n");
+
   while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
     printf("%f -> ", *fvalue);
   }
+
   printf("NULL\n\n");
 
-  // hash_table
+  printf("===========hash_table(char)==============\n");
   hash_table *chars;
-  hash_table_create(&chars, sizeof(char), NULL, free_function);
+  hash_table_create(&chars, 32, sizeof(char), NULL, permanent_arena);
+
   for (char c = 'a'; c <= 'z'; c++) {
-    char *c_ptr = malloc(sizeof(char) + 1);
+    char *c_ptr =
+        arena_alloc(permanent_arena, sizeof(char) + 1, alignof(char *), FALSE);
     snprintf(c_ptr, 2, "%c", c);
     hash_table_insert(chars, c_ptr, c_ptr);
   }
+
   hash_table_iterator *chars_it;
   hash_table_entry *entry;
   hash_table_iterator_create(&chars_it, chars);
-  printf("===========hash_table(char)==============\n");
+
   while ((hash_table_iterator_next(chars_it, &entry)) == 0) {
     char *cvalue;
     char *ckey;
@@ -176,6 +174,7 @@ int main(void) {
     hash_table_get_entry_value(entry, (void **)&cvalue);
     printf("{%s: %c} ", ckey, *cvalue);
   }
+
   printf("\n\n");
 
   // AVL tree
@@ -183,17 +182,17 @@ int main(void) {
   long tree_data[9] = {2, 1, 7, 4, 5, 5, 3, 8, 15};
   avl_tree *tree;
 
-  avl_tree_create(&tree, comparefn, free_long);
+  avl_tree_create(&tree, comparefn, NULL);
 
   printf("inserting... ");
   for (int i = 0; i < 8; i++) {
     printf("%ld ", tree_data[i]);
-    long *data_ptr = malloc(sizeof(long));
+    long *data_ptr =
+        arena_alloc(permanent_arena, sizeof(long), alignof(long), FALSE);
     *data_ptr = tree_data[i];
-    if (avl_tree_insert(tree, (void *)data_ptr) != 0) {
-      free(data_ptr); // insertion failed, no duplicates
-    }
+    avl_tree_insert(tree, (void *)data_ptr);
   }
+
   printf("\n");
 
   avl_tree_iterator *avl_it;
@@ -221,7 +220,7 @@ int main(void) {
   char *stack_data[] = {"s", "t", "a", "c", "k"};
   stack *my_stack;
 
-  stack_create(&my_stack, NULL);
+  stack_create(&my_stack, permanent_arena);
 
   for (int i = 0; i < 5; i++) {
     printf("pushing %s\n", stack_data[i]);
@@ -243,7 +242,7 @@ int main(void) {
   char *queue_data[] = {"q", "u", "e", "u", "e"};
   queue *my_queue;
 
-  queue_create(&my_queue, NULL);
+  queue_create(&my_queue, permanent_arena);
 
   for (int i = 0; i < 5; i++) {
     printf("enqueing %s\n", queue_data[i]);
@@ -268,11 +267,10 @@ int main(void) {
       {"foobaz", 1.9f, 7}, {"bar3", 4.0f, 8}, {"foobar", 1.1f, 9}};
   priority_queue *max_pqueue;
 
-  priority_queue_create(&max_pqueue, student_comparefn, NULL);
+  priority_queue_create(&max_pqueue, 16, student_comparefn, permanent_arena);
 
-  for (int i = 0; i < GET_ARRAY_SIZE(max_pqueue_data); i++) {
-    printf("inserting {name: %s, gpa: %.2f, id: %d}\n",
-    max_pqueue_data[i].name,
+  for (int i = 0; i < ARRAY_SIZE(max_pqueue_data); i++) {
+    printf("inserting {name: %s, gpa: %.2f, id: %d}\n", max_pqueue_data[i].name,
            max_pqueue_data[i].gpa, max_pqueue_data[i].id);
     priority_queue_insert(max_pqueue, &max_pqueue_data[i]);
   }
@@ -293,12 +291,13 @@ int main(void) {
   long min_pqueue_data[] = {9, 8, 2, 3, 4, 5, 6, 7, 5};
   priority_queue *min_pqueue;
 
-  priority_queue_create(&min_pqueue, NULL, free_long);
+  priority_queue_create(&min_pqueue, 16, NULL, permanent_arena);
 
   printf("inserting... ");
-  for (int i = 0; i < GET_ARRAY_SIZE(min_pqueue_data); i++) {
+  for (int i = 0; i < ARRAY_SIZE(min_pqueue_data); i++) {
     printf("%ld ", min_pqueue_data[i]);
-    long *long_ptr = malloc(sizeof(long));
+    long *long_ptr =
+        arena_alloc(permanent_arena, sizeof(long), alignof(long), FALSE);
     *long_ptr = min_pqueue_data[i];
     priority_queue_insert(min_pqueue, long_ptr);
   }
@@ -314,12 +313,11 @@ int main(void) {
 
   printf("\n");
 
-
   printf("==============deque================\n");
 
   char *deque_data[] = {"e", "u", "q", "e", "d", "e", "u", "q", "e", "d"};
   deque *my_deque;
-  deque_create(&my_deque, NULL);
+  deque_create(&my_deque, permanent_arena);
 
   printf("adding to the back... ");
   for (int i = 0; i < 5; i++) {
@@ -334,7 +332,7 @@ int main(void) {
   }
 
   printf("\nremoving from the front... ");
-  for(int i = 0; i < 5; i++) {
+  for (int i = 0; i < 5; i++) {
     char *data;
     deque_peek_front(my_deque, (void **)&data);
     printf("%s ", data);
@@ -342,7 +340,7 @@ int main(void) {
   }
 
   printf("\nremoving from the back... ");
-  for(int i = 5; i < 10; i++) {
+  for (int i = 5; i < 10; i++) {
     char *data;
     deque_peek_back(my_deque, (void **)&data);
     printf("%s ", data);
@@ -351,26 +349,10 @@ int main(void) {
 
   printf("\n");
 
-  deque_destroy(&my_deque);
   // de-allocate
-  dynamic_array_destroy(&numbers);
-  dynamic_array_destroy(&strings);
-  dynamic_array_iterator_destroy(&numbers_it);
-  dynamic_array_iterator_destroy(&strings_it);
-  string_builder_destroy(&sb);
-  linked_list_destroy(&floats);
-  linked_list_iterator_destroy(&float_it);
-  hash_table_destroy(&chars);
-  hash_table_iterator_destroy(&chars_it);
   avl_tree_destroy(&tree);
   avl_tree_iterator_destroy(&avl_it);
-  free(buffer);
-  free(view_buffer);
-  free(view2_buffer);
-  stack_destroy(&my_stack);
-  queue_destroy(&my_queue);
-  priority_queue_destroy(&min_pqueue);
-  priority_queue_destroy(&max_pqueue);
+  arena_destroy(&permanent_arena);
 
   return 0;
 }
