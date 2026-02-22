@@ -1,16 +1,18 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+#include "arena.h"
+
 typedef struct queue queue;
 
 /**
  * @brief Allocate resource and setup
  *
  * @param q the queue to initialize
- * @param freefn deallocation function for custom data type
+ * @param arena memory block for allocations
  * @return 0 on success, 1 otherwise
  */
-int queue_create(queue **q, void (*freefn)(void *data));
+int queue_create(queue **q, arena *arena);
 
 /**
  * @brief Insert 'data' in end/tail of the queue
@@ -53,13 +55,5 @@ int queue_get_size(queue *q);
  * @return 0 indicates 'q' is empty, 1 otherwise
  */
 int queue_is_empty(queue *q);
-
-/**
- * @brief Deallocate all resources
- *
- * @param q the queue to deallocate
- * @return 0 on success, 1 otherwise
- */
-int queue_destroy(queue **q);
 
 #endif // QUEUE_H
