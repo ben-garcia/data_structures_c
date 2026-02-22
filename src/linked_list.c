@@ -1,8 +1,10 @@
 #include "include/linked_list.h"
 
+#include <stdalign.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#define FALSE 0
 
 typedef struct linked_list_node {
   struct linked_list_node *next;
@@ -15,21 +17,22 @@ struct linked_list_iterator {
 
 struct linked_list {
   linked_list_node *head;
-  void (*freefn)(void **);
   int (*matchfn)(void *, void *);
-  unsigned int length;
+  arena *arena; // memory block for all allocatios
+  unsigned int size;
 };
 
-int linked_list_create(linked_list **list, void (*freefn)(void **),
-                       int (*matchfn)(void *, void *)) {
-  if ((*list = malloc(sizeof(linked_list))) == NULL) {
+int linked_list_create(linked_list **list, int (*matchfn)(void *, void *),
+                       arena *arena) {
+  if ((*list = arena_alloc(arena, sizeof(linked_list), alignof(linked_list),
+                           FALSE)) == NULL) {
     return 1;
   }
 
-  (*list)->freefn = freefn;
   (*list)->matchfn = matchfn;
+  (*list)->arena = arena;
   (*list)->head = NULL;
-  (*list)->length = 0;
+  (*list)->size = 0;
 
   return 0;
 }
@@ -40,18 +43,20 @@ int linked_list_add(linked_list *list, void *data) {
   }
 
   if (list->head == NULL) {
-    if ((list->head = calloc(1, sizeof(linked_list_node))) == NULL) {
+    if ((list->head = arena_alloc(list->arena, sizeof(linked_list_node),
+                                  alignof(linked_list_node), FALSE)) == NULL) {
       return 1;
     }
     list->head->data = data;
-    list->length = 1;
+    list->size = 1;
 
     return 0;
   }
 
   linked_list_node *current_head = list->head;
   linked_list_node *new_node;
-  if ((new_node = malloc(sizeof(linked_list_node))) == NULL) {
+  if ((new_node = arena_alloc(list->arena, sizeof(linked_list_node),
+                              alignof(linked_list_node), FALSE)) == NULL) {
     return 1;
   }
 
@@ -59,7 +64,7 @@ int linked_list_add(linked_list *list, void *data) {
   new_node->data = data;
 
   list->head = new_node;
-  list->length++;
+  list->size++;
 
   return 0;
 }
@@ -87,7 +92,7 @@ int linked_list_find(linked_list *list, void *data, void **result) {
 }
 
 int linked_list_remove(linked_list *list, void *data) {
-  if (list == NULL || list->head == NULL || list->length == 0) {
+  if (list == NULL || list->head == NULL || list->size == 0) {
     return 1;
   }
 
@@ -109,13 +114,9 @@ int linked_list_remove(linked_list *list, void *data) {
           prev->next = current->next;
         }
 
-        if (list->freefn != NULL) {
-          list->freefn(node->data);
-        }
-
-        free(node);
         node = NULL;
-        list->length--;
+        list->size--;
+
         return 0;
       }
     } else if (data == node->data) {
@@ -129,13 +130,8 @@ int linked_list_remove(linked_list *list, void *data) {
         prev->next = current->next;
       }
 
-      if (list->freefn != NULL) {
-        list->freefn(node->data);
-      }
-
-      free(node);
       node = NULL;
-      list->length--;
+      list->size--;
       return 0;
     }
     prev = current;
@@ -183,49 +179,18 @@ void *linked_list_get_node_data(linked_list_node *node) {
   return node->data;
 }
 
-int linked_list_destroy(linked_list **list) {
-  if (*list == NULL || (*list)->head == NULL) {
-    return 1;
-  }
-
-  linked_list_node *current = (*list)->head;
-
-  while (current != NULL) {
-    linked_list_node *node = current;
-    current = current->next;
-    if ((*list)->freefn != NULL) {
-      (*list)->freefn(&node->data);
-    }
-    free(node);
-    node = NULL;
-  }
-
-  free(*list);
-  *list = NULL;
-  return 0;
-}
-
 int linked_list_iterator_create(linked_list_iterator **it, linked_list *list) {
-  if (list->length == 0) {
+  if (list->size == 0) {
     return 1;
   }
 
-  if (((*it) = malloc(sizeof(linked_list_iterator))) == NULL) {
+  if (((*it) = arena_alloc(list->arena, sizeof(linked_list_iterator),
+                           alignof(linked_list_iterator), FALSE)) == NULL) {
     return 1;
   }
 
   (*it)->next = list->head;
 
-  return 0;
-}
-
-int linked_list_iterator_destroy(linked_list_iterator **it) {
-  if (*it == NULL) {
-    return 1;
-  }
-
-  free(*it);
-  *it = NULL;
   return 0;
 }
 
@@ -244,7 +209,7 @@ int linked_list_iterator_next(linked_list_iterator *it, void **value) {
 }
 
 int linked_list_iterator_reset(linked_list_iterator **it, linked_list *list) {
-  if (list->length == 0) {
+  if (list->size == 0) {
     return 1;
   }
 
