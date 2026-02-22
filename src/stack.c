@@ -1,5 +1,7 @@
 #include "include/stack.h"
-#include <stdlib.h>
+#include <stdalign.h>
+
+#define FALSE 0
 
 typedef struct stack_node {
   struct stack_node *next;
@@ -7,17 +9,17 @@ typedef struct stack_node {
 } stack_node;
 
 struct stack {
-  stack_node *head;           // linked list head
-  void (*freefn)(void *data); // deallocation function for custom data type
+  stack_node *head; // linked list head
+  arena *arena;     // memory block for allocations
   unsigned int size;
 };
 
-int stack_create(stack **s, void (*freefn)(void *data)) {
-  if ((*s = malloc(sizeof(stack))) == NULL) {
+int stack_create(stack **s, arena *arena) {
+  if ((*s = arena_alloc(arena, sizeof(stack), alignof(stack), FALSE)) == NULL) {
     return 1;
   }
 
-  (*s)->freefn = freefn;
+  (*s)->arena = arena;
   (*s)->head = NULL;
   (*s)->size = 0;
 
@@ -30,9 +32,10 @@ int stack_create(stack **s, void (*freefn)(void *data)) {
  * @param data the node data
  * @return the newly created stack node
  */
-static stack_node *stack_node_create(void *data) {
+static stack_node *stack_node_create(arena *arena, void *data) {
   stack_node *node;
-  if ((node = malloc(sizeof(stack_node))) == NULL) {
+  if ((node = arena_alloc(arena, sizeof(stack_node), alignof(stack_node),
+                          FALSE)) == NULL) {
     return NULL;
   }
 
@@ -48,13 +51,13 @@ int stack_push(stack *s, void *data) {
   }
 
   if (s->head == NULL) { // size == 0
-    s->head = stack_node_create(data);
+    s->head = stack_node_create(s->arena, data);
     s->size++; // increment size
     return 0;
   }
 
   stack_node *temp = s->head;
-  stack_node *node = stack_node_create(data);
+  stack_node *node = stack_node_create(s->arena, data);
 
   node->next = temp;
   s->head = node;
@@ -69,15 +72,8 @@ int stack_pop(stack *s) {
   }
 
   stack_node *node = s->head;
-
   s->head = node->next;
   s->size--;
-
-  if (s->freefn != NULL) {
-    s->freefn(node->data);
-  }
-
-  free(node);
 
   return 0;
 }
@@ -91,33 +87,7 @@ int stack_peek(stack *s, void **data) {
     return 1;
   }
 
-  *data =  s->head->data;
-  return 0;
-}
-
-int stack_destroy(stack **s) {
-  if (*s == NULL) { // nothing to do
-    return 1;
-  } else if ((*s)->head == NULL) { // size > 0, do nothing
-    free(*s);
-    *s = NULL;
-    return 1;
-  }
-
-  stack_node *current = (*s)->head;
-  while (current != NULL) {
-    stack_node *node = current;
-    current = current->next;
-
-    if((*s)->freefn != NULL) {
-      (*s)->freefn(node->data);
-    }
-
-    free(node);
-  }
-
-  free(*s);
-  *s = NULL;
+  *data = s->head->data;
 
   return 0;
 }

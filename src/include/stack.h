@@ -1,16 +1,18 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include "arena.h"
+
 typedef struct stack stack;
 
 /**
  * @brief Allocate resource and setup 
  *
  * @param s the stack to initialize
- * @param freefn deallocation fuction for custom data types
+ * @param arena memory block for allocations 
  * @return 0 on success, 1 otherwise
  */
-int stack_create(stack **s, void (*freefn)(void *data));
+int stack_create(stack **s, arena *arena);
 
 /**
  * @brief Insert 'data' on to the stack 
@@ -53,13 +55,5 @@ int stack_is_empty(stack *s);
  * @return 0 on success, 1 otherwise
  */
 int stack_peek(stack *s, void **data);
-
-/**
- * @brief Deallocate all resources 
- *
- * @param s the stack to deallocate
- * @return 0 on success, 1 otherwise
- */
-int stack_destroy(stack **s);
 
 #endif // STACK_H
