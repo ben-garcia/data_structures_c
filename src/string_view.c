@@ -3,11 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-string_view string_view_create(const char *source) {
+#define FALSE 0
+
+string_view string_view_create(const char *source, arena *arena) {
   unsigned int source_length = strlen(source);
   string_view view = {0};
   if (source_length < 1) {
-    view = (string_view){.data = NULL, .length = 0};
+    view = (string_view){.data = NULL, .length = 0, .arena = arena};
   }
   view = (string_view){.data = source, .length = strlen(source)};
 
@@ -73,7 +75,7 @@ int string_view_to_string(string_view *view, char **str) {
     return 1;
   }
 
-  if (((*str) = malloc(view->length + 1)) == NULL) {
+  if (((*str) = arena_alloc(view->arena, view->length + 1, sizeof(char *), FALSE)) == NULL) {
     return 1;
   }
 

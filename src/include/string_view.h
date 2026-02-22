@@ -1,21 +1,24 @@
 #ifndef STRING_VIEW_H
 #define STRING_VIEW_H
 
+#include "arena.h"
 #include <string.h>
 
 typedef struct string_view {
   const char *data;
   unsigned int length;
+  arena *arena; // memory block for allocations
 } string_view;
 
 /**
- * Create a string view to te source string. 
+ * Create a string view to te source string.
  *
  * @param view string_view to create.
  * @param source string to view.
+ * @param arena memory block for allcations 
  * @return 0 on success, 1 otherwise
  */
-string_view string_view_create(const char *source);
+string_view string_view_create(const char *source, arena *arena);
 
 /**
  * @brief Seperate string into different regions determined by a delimioter.
