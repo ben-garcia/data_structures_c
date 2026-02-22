@@ -18,8 +18,7 @@
 #define GET_RIGHT_CHILD_INDEX(i) (2 * (i) + 2)
 
 struct priority_queue {
-  void **items;                                   // array used as max heap
-  int (*comparefn)(const void *a, const void *b); // comparison function
+  void **items; // array used as max heap
   /**
    * Comparison function
    *
@@ -51,8 +50,8 @@ struct priority_queue {
    *   return 0;
    * }
    */
-  void (*freefn)(void *data); // deallaction function
-  arena *arena;
+  int (*comparefn)(const void *a, const void *b); // comparison function
+  arena *arena;          // memory block used for allocations
   unsigned int capacity; // current limit of items
   unsigned int size;     // elements of items
 };
@@ -153,7 +152,7 @@ static int build_max_heap(const void *a, const void *b) {
 
 int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
                           int (*comparefn)(const void *a, const void *b),
-                          void (*freefn)(void *data), arena *arena) {
+                          arena *arena) {
   if (((*pq) = arena_alloc(arena, sizeof(priority_queue),
                            alignof(priority_queue), FALSE)) == NULL) {
     return 1;
@@ -162,7 +161,6 @@ int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
   (*pq)->capacity = (initial_capacity <= 0) ? 16 : initial_capacity;
   (*pq)->arena = arena;
   (*pq)->comparefn = comparefn == NULL ? build_max_heap : comparefn;
-  (*pq)->freefn = freefn;
   (*pq)->size = 0;
 
   if ((((*pq)->items) = arena_alloc(arena, (*pq)->capacity * sizeof(void *),
@@ -206,9 +204,6 @@ int priority_queue_delete(priority_queue *pq) {
   }
 
   pq->items[0] = pq->items[pq->size - 1]; // last element is new root
-
-  if (pq->freefn != NULL) {
-  }
 
   pq->size--;
   heapify_down(pq, 0);
