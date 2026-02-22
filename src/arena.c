@@ -1,7 +1,7 @@
 #include "include/arena.h"
 #include <string.h>
 
-#define IS_POWER_OF_TWO(n) !(((uint64_t)(n) & ((uint64_t)(n) - 1)) == 0)
+#define IS_POWER_OF_TWO(n) ((uint64_t)(n) & ((uint64_t)(n) - 1))
 /**
  * Aligns 'n' up to the nearest 'p'(power of 2).
  */
@@ -19,12 +19,8 @@ struct arena {
 /**
  * Get the size of a block of virtual memory from the OS.
  */
-static size_t get_page_size() { return sysconf(_SC_PAGESIZE); }
+static long get_page_size() { return sysconf(_SC_PAGESIZE); }
 
-/**
- * @brief
- *
- */
 static void *align_forward(uint8_t *address, uint64_t alignment) {
   uintptr_t addr =
       (uintptr_t)address; // Convert to integer type for calculation
@@ -122,12 +118,13 @@ void *arena_realloc(arena *a, void *old_ptr, const size_t old_size,
     return NULL; // out of space
   }
 
-  void *memory = a->base_ptr + (a->offset + new_size);
-
+  void *memory = a->base_ptr + a->offset;
+  a->offset += new_size; // update offset
   memcpy(memory, old_ptr, old_size);
 
   if (zero_out == 1) {
-    memset(memory, 0, old_size);
+    // zero out memory past old data
+    memset(memory + old_size, 0, new_size - old_size);
   }
 
   return memory;

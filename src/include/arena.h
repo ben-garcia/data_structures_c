@@ -52,13 +52,13 @@ int arena_create(arena **a, size_t reserve_size);
 /**
  * @brief Commit 'size' from the Virtual Memory Area.
  *
- * @param a arena to modify
+ * @param arena the arena to modify
  * @param size memory block size to commit.
  * @param alignment the alignment boundary.
- * @param zero_out indicates whether to zero out the memory block
+ * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly committed memory.
  */
-void *arena_alloc(arena *a, size_t size, size_t alignment,
+void *arena_alloc(arena *arena, size_t size, size_t alignment,
                   unsigned int zero_out);
 
 /**
@@ -68,7 +68,7 @@ void *arena_alloc(arena *a, size_t size, size_t alignment,
  * @param old_ptr start of memory chuck to reallocate
  * @param old_size size of the old memory block
  * @param new_size size of the new memory block
- * @param zero_out indicates whether to zero out the memory block
+ * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly resized memory block
  */
 void *arena_realloc(arena *a, void *old_ptr, const size_t old_size,
