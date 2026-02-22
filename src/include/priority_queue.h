@@ -55,12 +55,4 @@ int priority_queue_delete(priority_queue *pq);
  */
 int priority_queue_is_empty(priority_queue *pq);
 
-/**
- * @brief Deallocate all resources 
- *
- * @param pq the priority_queue to modify 
- * @return 0 on success, 1 otherwise
- */
-int priority_queue_destroy(priority_queue **pq);
-
 #endif // PRIORITY_QUEUE_H

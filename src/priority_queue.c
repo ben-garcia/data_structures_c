@@ -205,11 +205,9 @@ int priority_queue_delete(priority_queue *pq) {
     return 1;
   }
 
-  void *root = pq->items[0];
   pq->items[0] = pq->items[pq->size - 1]; // last element is new root
 
   if (pq->freefn != NULL) {
-    pq->freefn(root); // deallocate
   }
 
   pq->size--;
@@ -224,18 +222,4 @@ int priority_queue_is_empty(priority_queue *pq) {
   }
 
   return !(pq->size == 0);
-}
-
-int priority_queue_destroy(priority_queue **pq) {
-  if (*pq == NULL) { // must be defined
-    return 1;
-  }
-
-  for (unsigned int i = 0; i < (*pq)->size; i++) {
-    if ((*pq)->freefn != NULL) {
-      (*pq)->freefn((*pq)->items[i]);
-    }
-  }
-
-  return 0;
 }
