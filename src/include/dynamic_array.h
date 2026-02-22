@@ -1,6 +1,8 @@
 #ifndef DYNAMIC_ARRAY_H
 #define DYNAMIC_ARRAY_H
 
+#include "arena.h"
+
 typedef struct dynamic_array dynamic_array;
 typedef struct dynamic_array_iterator dynamic_array_iterator;
 
@@ -8,14 +10,18 @@ typedef struct dynamic_array_iterator dynamic_array_iterator;
  * @brief Allocate necessary resources and setup.
  *
  * @param array dynamic_array to create.
+ * @param initial_capacity size of array before resizing
  * @param data_size Size in bytes of each value stored.
- * @param freefn Function used to deallocate user defined structure.
- * @param matchfn Function used to find a user defined struture.
+ * @param matchfn comparison function used for 'linked_list_find'
+ *        MUST return 0 if a == b,
+ *             negative number if a < b
+ *             positive number if a > b,
+ * @param arena memory block used for allocations
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_create(dynamic_array **array, unsigned int data_size,
-                         void (*freefn)(void **),
-                         int (*matchfn)(void *, void *));
+int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
+                         unsigned int data_size, int (*matchfn)(void *, void *),
+                         arena *arena);
 
 /**
  * Add a new element to the array.
@@ -93,13 +99,6 @@ int dynamic_array_remove(dynamic_array *array, unsigned int index);
 int dynamic_array_shrink_to_fit(dynamic_array *array);
 
 /**
- * @brief Deallocate and set to NULL.
- *
- * @param array dynamic_array to deallocate.
- */
-void dynamic_array_destroy(dynamic_array **array);
-
-/**
  * @brief Allocate necessary resources and setup.
  *
  * Use to iterate through a dynamic array.
@@ -108,7 +107,8 @@ void dynamic_array_destroy(dynamic_array **array);
  * @param array dynamic_array array to iterate through.
  * @return 0 on success, 1 otherwise
  */
- int dynamic_array_iterator_create(dynamic_array_iterator **it, dynamic_array *array);
+int dynamic_array_iterator_create(dynamic_array_iterator **it,
+                                  dynamic_array *array);
 
 /**
  * @brief Get the next element of the dynamic array
@@ -126,13 +126,5 @@ int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item);
  * @return 0 on success, 1 otherwise
  */
 int dynamic_array_iterator_reset(dynamic_array_iterator *it);
-
-/**
- * @brief Deallocate and set to NULL.
- *
- * @param it dynamic array iterator to deallocate.
- * @return 0 on success, 1 otherwise
- */
-int dynamic_array_iterator_destroy(dynamic_array_iterator **it);
 
 #endif // DYNAMIC_ARRAY_H

@@ -1,15 +1,18 @@
 #include "include/dynamic_array.h"
 
-#include <stdlib.h>
+#include <stdalign.h>
 #include <string.h>
+
+#define TRUE 1
+#define FALSE 0
 
 struct dynamic_array {
   void **items;
-  void (*freefn)(void **);
-  int (*matchfn)(void *, void *);
-  unsigned int capacity;  // limit of items before resizing.
-  unsigned int size;      // number of elements in the array.
-  unsigned int data_size; // bytes needed for every element..
+  int (*matchfn)(void *, void *); // comparison function
+  arena *arena;                   // memory block used for allocations
+  unsigned int capacity;          // limit of items before resizing.
+  unsigned int size;              // number of elements in the array.
+  unsigned int data_size;         // bytes needed for every element..
 };
 
 struct dynamic_array_iterator {
@@ -28,32 +31,29 @@ struct dynamic_array_iterator {
 static int dynamic_array_resize(dynamic_array **array) {
   size_t old_capacity = (*array)->capacity;
 
-  if (((*array)->items =
-           realloc((*array)->items,
-                   (*array)->data_size * ((*array)->capacity <<= 1))) == NULL) {
+  if (((*array)->items = arena_realloc(
+           (*array)->arena, (*array)->items, old_capacity * (*array)->data_size,
+           (*array)->data_size * ((*array)->capacity <<= 1), TRUE)) == NULL) {
     return 1;
   }
-
-  // since realloc doesn't zero out new space allocated,
-  // it is done manually.
-  memset((void *)(*array)->items + (old_capacity * (*array)->data_size), 0,
-         (*array)->capacity - old_capacity);
 
   return 0;
 }
 
-int dynamic_array_create(dynamic_array **array, unsigned int data_size,
-                         void (*freefn)(void **),
-                         int (*matchfn)(void *, void *)) {
+int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
+                         unsigned int data_size, int (*matchfn)(void *, void *),
+                         arena *arena) {
 
-  if ((*array = malloc(sizeof(dynamic_array))) == NULL) {
+  if ((*array = arena_alloc(arena, sizeof(dynamic_array),
+                            alignof(dynamic_array), FALSE)) == NULL) {
     return 1;
   }
 
-  (*array)->capacity = 16; // initial capacity
+  (*array)->capacity =
+      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
   (*array)->data_size = data_size;
-  (*array)->freefn = freefn;
   (*array)->matchfn = matchfn;
+  (*array)->arena = arena;
   (*array)->items = NULL;
   (*array)->size = 0;
 
@@ -68,7 +68,8 @@ int dynamic_array_add(dynamic_array *array, const void *item) {
 
   // array can't be empty.
   if (array->size == 0) {
-    array->items = calloc(array->capacity, array->data_size);
+    array->items = arena_alloc(array->arena, array->capacity * array->data_size,
+                               alignof(void *), FALSE);
   }
 
   if (array->size == array->capacity) {
@@ -89,7 +90,8 @@ int dynamic_array_add_many(dynamic_array *array, void **items,
   }
 
   if (dynamic_array_is_empty(array)) {
-    array->items = calloc(array->capacity, array->data_size);
+    array->items = arena_alloc(array->arena, array->capacity * array->data_size,
+                               alignof(void *), FALSE);
   }
 
   // make sure array has the necessary memory.
@@ -150,37 +152,10 @@ int dynamic_array_remove(dynamic_array *array, unsigned int index) {
   return 0;
 }
 
-int dynamic_array_shrink_to_fit(dynamic_array *array) {
-  // Array must be defined.
-  if (array == NULL || array->size == array->capacity) {
-    return 1;
-  }
-
-  array->items = realloc(array->items, array->size * array->data_size);
-  array->capacity = array->size;
-
-  return 0;
-}
-
-void dynamic_array_destroy(dynamic_array **array) {
-  if (*array == NULL) {
-    return;
-  }
-
-  if ((*array)->freefn != NULL) {
-    for (unsigned int i = 0; i < (*array)->size; i++) {
-      (*array)->freefn(&((*array)->items[i]));
-    }
-  }
-
-  free((*array)->items);
-  (*array)->items = NULL;
-  free(*array);
-  *array = NULL;
-}
-
-int dynamic_array_iterator_create(dynamic_array_iterator **it, dynamic_array *array) {
-  if ((*it = malloc(sizeof(dynamic_array_iterator))) == NULL) {
+int dynamic_array_iterator_create(dynamic_array_iterator **it,
+                                  dynamic_array *array) {
+  if ((*it = arena_alloc(array->arena, sizeof(dynamic_array_iterator),
+                         alignof(dynamic_array_iterator), FALSE)) == NULL) {
     return 1;
   }
 
@@ -210,15 +185,5 @@ int dynamic_array_iterator_reset(dynamic_array_iterator *it) {
   }
 
   it->index = 0;
-  return 0;
-}
-
-int dynamic_array_iterator_destroy(dynamic_array_iterator **it) {
-  if (*it == NULL) {
-    return 1;
-  }
-
-  free(*it);
-  *it = NULL;
   return 0;
 }
