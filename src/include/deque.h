@@ -1,16 +1,18 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
+#include "arena.h"
+
 typedef struct deque deque;
 
 /**
  * @brief Allocate resource and setup
  *
  * @param d the deque to initialize
- * @param freefn deallocation function for custom data type
+ * @param arena memory block used for allocations 
  * @return 0 on success, 1 otherwise
  */
-int deque_create(deque **d, void (*freefn)(void *data));
+int deque_create(deque **d, arena *arena);
 
 /**
  * @brief Add 'data' at the front/head of the deque
@@ -79,13 +81,5 @@ int deque_get_size(deque *d);
  * @return 0 indicates 'd' is empty, 1 otherwise
  */
 int deque_is_empty(deque *d);
-
-/**
- * @brief Deallocate all resources
- *
- * @param d the deque to deallocate
- * @return 0 on success, 1 otherwise
- */
-int deque_destroy(deque **d);
 
 #endif // DEQUE_H
