@@ -1,7 +1,8 @@
 #include "include/avl_tree.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdalign.h>
+
+#define FALSE 0
 
 // Return the maximum of a and b
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -21,6 +22,7 @@ struct avl_tree {
    */
   int (*comparefn)(const void *a, const void *b);
   void (*freefn)(void *data); // deallocation function
+  arena *arena;               // memory block for allocations
   unsigned int size;          // number of nodes
 };
 
@@ -41,11 +43,13 @@ struct avl_tree_iterator {
 /**
  * Create a AVL Tree node
  *
+ * @param arena memory block used for allocations
  * @param data the data the node will hold
  * @return the newly created node
  */
-static avl_tree_node *avl_tree_node_create(void *data) {
-  avl_tree_node *node = malloc(sizeof(avl_tree_node));
+static avl_tree_node *avl_tree_node_create(arena *arena, void *data) {
+  avl_tree_node *node =
+      arena_alloc(arena, sizeof(avl_tree_node), alignof(avl_tree_node), FALSE);
   if (node == NULL) {
     return NULL;
   }
@@ -122,21 +126,20 @@ static avl_tree_node *left_rotation(avl_tree_node *node) {
  * @param is_duplicate flag used to indicate if data is a already a node
  * @param comparefn comparison function
  */
-static avl_tree_node *
-insert_node(avl_tree_node *node, void *data, int *is_duplicate,
-            int (*comparefn)(const void *a, const void *b)) {
+static avl_tree_node *insert_node(avl_tree *tree, avl_tree_node *node,
+                                  void *data, int *is_duplicate) {
   if (node == NULL) {
-    return avl_tree_node_create(data);
+    return avl_tree_node_create(tree->arena, data);
   }
 
-  int compare_result = comparefn(data, node->data);
+  int compare_result = tree->comparefn(data, node->data);
   if (compare_result == 0) {
     *is_duplicate = 0;
     return node; // No duplicates or updates allowed
   } else if (compare_result < 0) {
-    node->left = insert_node(node->left, data, is_duplicate, comparefn);
+    node->left = insert_node(tree, node->left, data, is_duplicate);
   } else if (compare_result > 0) {
-    node->right = insert_node(node->right, data, is_duplicate, comparefn);
+    node->right = insert_node(tree, node->right, data, is_duplicate);
   }
 
   node->height = MAX(GET_HEIGHT(node->left), GET_HEIGHT(node->right)) + 1;
@@ -144,12 +147,12 @@ insert_node(avl_tree_node *node, void *data, int *is_duplicate,
   // Check for unbalance and update
   int balance_factor = GET_BALANCE_FACTOR(node);
   // left left
-  if (balance_factor > 1 && comparefn(data, node->left->data) < 0) {
+  if (balance_factor > 1 && tree->comparefn(data, node->left->data) < 0) {
     return right_rotation(node);
   }
 
   // right right
-  if (balance_factor < -1 && comparefn(data, node->right->data) > 0) {
+  if (balance_factor < -1 && tree->comparefn(data, node->right->data) > 0) {
     return left_rotation(node);
   }
 
@@ -166,7 +169,7 @@ insert_node(avl_tree_node *node, void *data, int *is_duplicate,
    *      \         /          / \
    *       5       4          4   7
    */
-  if (balance_factor > 1 && comparefn(data, node->left->data) > 0) {
+  if (balance_factor > 1 && tree->comparefn(data, node->left->data) > 0) {
     node->left = left_rotation(node->left);
     return right_rotation(node);
   }
@@ -184,7 +187,7 @@ insert_node(avl_tree_node *node, void *data, int *is_duplicate,
    *    /            \          / \
    *   5              7        4   7
    */
-  if (balance_factor < -1 && comparefn(data, node->right->data) < 0) {
+  if (balance_factor < -1 && tree->comparefn(data, node->right->data) < 0) {
     node->right = right_rotation(node->right);
     return left_rotation(node);
   }
@@ -243,7 +246,7 @@ delete_node(avl_tree_node *node, void *data, int *is_found,
         *node = *temp;
       }
 
-      free(temp);
+      // free(temp);
     } else {
       avl_tree_node *temp = get_min_value_node(node->right);
 
@@ -319,38 +322,16 @@ static void *search(avl_tree_node *node, void *data,
   return NULL;
 }
 
-/**
- * Deallocate all nodes in the tree
- *
- * @param node the root node to start from
- */
-static void destroy(avl_tree_node *node, void (*freefn)(void *data)) {
-  if (node == NULL) {
-    return;
-  }
-
-  destroy(node->left, freefn);
-  destroy(node->right, freefn);
-
-  if (freefn != NULL) {
-    freefn(node->data); // deallocate node->data
-  }
-
-  free(node);
-}
-
 int avl_tree_create(avl_tree **tree,
                     int (*comparefn)(const void *a, const void *b),
-                    void (*freefn)(void *data)) {
-  if (comparefn == NULL) {
-    return 1;
-  }
-  if ((*tree = malloc(sizeof(avl_tree_node))) == NULL) {
+                    arena *arena) {
+  if ((*tree = arena_alloc(arena, sizeof(avl_tree), alignof(avl_tree),
+                           FALSE)) == NULL) {
     return 1;
   }
 
   (*tree)->comparefn = comparefn;
-  (*tree)->freefn = freefn;
+  (*tree)->arena = arena;
   (*tree)->root = NULL;
   (*tree)->size = 0;
 
@@ -362,7 +343,7 @@ unsigned int avl_tree_get_size(avl_tree *tree) { return tree->size; }
 int avl_tree_insert(avl_tree *tree, void *data) {
   int result = 1;
 
-  tree->root = insert_node(tree->root, data, &result, tree->comparefn);
+  tree->root = insert_node(tree, tree->root, data, &result);
 
   if (result == 1) {
     tree->size++; // only increment size for every unique entry
@@ -393,19 +374,6 @@ int avl_tree_delete(avl_tree *tree, void *data) {
   return !result;
 }
 
-int avl_tree_destroy(avl_tree **tree) {
-  if (*tree == NULL) {
-    return 1;
-  }
-
-  destroy((*tree)->root, (*tree)->freefn);
-
-  free(*tree);
-  *tree = NULL;
-
-  return 0;
-}
-
 /**
  *  Traverse the tree node by node and add 'node->data' to the 'it->nodes' array
  *
@@ -428,11 +396,13 @@ int avl_tree_iterator_create(avl_tree_iterator **it, avl_tree *tree) {
     return 1;
   }
 
-  if (((*it) = malloc(sizeof(avl_tree_iterator))) == NULL) {
+  if (((*it) = arena_alloc(tree->arena, sizeof(avl_tree_iterator),
+                           alignof(avl_tree_iterator), FALSE)) == NULL) {
     return 1;
   }
 
-  if (((*it)->tree_data = malloc(sizeof(void *) * tree->size)) == NULL) {
+  if (((*it)->tree_data = arena_alloc(tree->arena, sizeof(void *) * tree->size,
+                                      alignof(void *), FALSE)) == NULL) {
     return 1;
   }
 
@@ -468,18 +438,6 @@ int avl_tree_iterator_reset(avl_tree_iterator **it) {
   (*it)->nodes_current_size = 0;
 
   add_tree_data_to_iterator((*it)->tree->root, *it);
-
-  return 0;
-}
-
-int avl_tree_iterator_destroy(avl_tree_iterator **it) {
-  if (*it == NULL) {
-    return 1;
-  }
-
-  free((*it)->tree_data);
-  free(*it);
-  *it = NULL;
 
   return 0;
 }

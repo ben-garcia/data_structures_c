@@ -25,7 +25,6 @@ typedef struct student {
   int id;
 } student;
 
-void free_long(void *data) { free(data); }
 int comparefn(const void *a, const void *b) { return *(long *)a - *(long *)b; }
 // Comparison function that uses student.gpa to determine priority
 // and use student.name for duplicates.
@@ -177,19 +176,18 @@ int main(void) {
 
   printf("\n\n");
 
-  // AVL tree
   printf("=============AVL tree=================\n");
   long tree_data[9] = {2, 1, 7, 4, 5, 5, 3, 8, 15};
   avl_tree *tree;
 
-  avl_tree_create(&tree, comparefn, NULL);
+  avl_tree_create(&tree, comparefn, permanent_arena);
 
   printf("inserting... ");
   for (int i = 0; i < 8; i++) {
-    printf("%ld ", tree_data[i]);
     long *data_ptr =
         arena_alloc(permanent_arena, sizeof(long), alignof(long), FALSE);
     *data_ptr = tree_data[i];
+    printf("%ld ", *data_ptr);
     avl_tree_insert(tree, (void *)data_ptr);
   }
 
@@ -214,6 +212,7 @@ int main(void) {
   while (avl_tree_iterator_next(avl_it, (void **)&node_data) == 0) {
     printf("%ld ", *node_data);
   }
+
   printf("\n\n");
 
   printf("=============stack====================\n");
@@ -350,8 +349,6 @@ int main(void) {
   printf("\n");
 
   // de-allocate
-  avl_tree_destroy(&tree);
-  avl_tree_iterator_destroy(&avl_it);
   arena_destroy(&permanent_arena);
 
   return 0;
