@@ -87,7 +87,8 @@ int main(void) {
 
   // string builder
   string_builder *sb;
-  string_view str_view = {.data = " and Hello", .length = 10};
+  string_view *str_view;
+  string_view_create(&str_view, " and Hello", permanent_arena);
   char *buffer;
 
   string_builder_create(&sb, permanent_arena);
@@ -97,12 +98,14 @@ int main(void) {
   string_builder_build(sb, &buffer);
 
   // string view
-  string_view view = {.data = buffer, .length = 11};
-  string_view view2 = {.data = "Testing", .length = 4};
+  string_view *view ;
+  string_view_create(&view, buffer,permanent_arena);
+  string_view *view2;
+  string_view_create(&view2, "Testing",permanent_arena);
   char *view_buffer;
   char *view2_buffer;
-  string_view_to_string(&view, &view_buffer);
-  string_view_to_string(&view2, &view2_buffer);
+  string_view_to_string(view, &view_buffer);
+  string_view_to_string(view2, &view2_buffer);
 
   printf("===========dynamic_array(strings)==============\n");
   dynamic_array *strings;
@@ -135,7 +138,7 @@ int main(void) {
   float *fvalue;
   linked_list_iterator_create(&float_it, floats);
   while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
-    printf("%f -> ", *fvalue);
+    printf("%.2f -> ", *fvalue);
   }
 
   printf("NULL\n\n");
@@ -146,7 +149,7 @@ int main(void) {
   linked_list_iterator_reset(&float_it, floats);
 
   while (linked_list_iterator_next(float_it, (void **)&fvalue) == 0) {
-    printf("%f -> ", *fvalue);
+    printf("%.2f -> ", *fvalue);
   }
 
   printf("NULL\n\n");

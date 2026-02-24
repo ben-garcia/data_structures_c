@@ -53,10 +53,10 @@ int string_builder_append_fmt_str(string_builder *sb,
  * @brief Append a string view to the string builder
  *
  * @param sb string_builder to modify.
- * @param view string_view to add
+ * @param view string_view to append
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append_view(string_builder *sb, const string_view view);
+int string_builder_append_view(string_builder *sb, const string_view *view);
 
 /**
  * @brief Build string.

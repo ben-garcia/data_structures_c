@@ -68,12 +68,15 @@ exit:
   return result;
 }
 
-int string_builder_append_view(string_builder *sb, string_view view) {
-  if (sb == NULL || view.data == NULL || view.length == 0) {
+int string_builder_append_view(string_builder *sb, const string_view *view) {
+  int view_size = string_view_size(view);
+  char *view_data = string_view_data(view);
+
+  if (sb == NULL || view_data == NULL || view_size == 0) {
     return 1;
   }
 
-  return dynamic_array_add_many(sb->string, (void **)view.data, view.length);
+  return dynamic_array_add_many(sb->string, (void **)view_data, view_size);
 }
 
 int string_builder_build(string_builder *sb, char **buffer) {
