@@ -12,13 +12,11 @@ typedef struct hash_table_iterator hash_table_iterator;
  *
  * @param ht hash_table to create.
  * @param initial_capacity number of buckets before resizing
- * @param data_size size in bytes of each value stored.
  * @param hashfn hashing function, if set to NULL FNV-1a  is used.
  * @param arena memory block for all allocations
  * @return 0 on success, 1 otherwise
  */
 int hash_table_create(hash_table **ht, unsigned int initial_capacity,
-                      unsigned int data_size,
                       unsigned int (*hashfn)(const char *, unsigned int),
                       arena *arena);
 
@@ -26,15 +24,15 @@ int hash_table_create(hash_table **ht, unsigned int initial_capacity,
  * Retrive the number of entries in the hash table.
  *
  * @param ht the hash table to access.
- * @return -1 on erorr, number of entries otherwise
+ * @return number of entries otherwise, -1 otherwise
  */
-int hash_table_get_size(hash_table *ht);
+int hash_table_size(hash_table *ht);
 
 /**
- * Insert an entry to the hash table.
+ * Insert an entry into the hash table.
  *
  * This function DOES NOT change the value of an existing entry.
- * To update the value use 'hash_table_insert_and_replace'.
+ * To update the value use 'hash_table_insert_or_update'.
  *
  * @param ht hash table to be modified.
  * @param key identifier used to access the data stored.
@@ -44,7 +42,7 @@ int hash_table_get_size(hash_table *ht);
 int hash_table_insert(hash_table *ht, const char *key, const void *value);
 
 /**
- * Insert/Update an entry to the hash table.
+ * Insert/Update an entry into the hash table.
  *
  * This function DOES change the value of an existing entry.
  * To prevent this use 'hash_table_insert' instead.
@@ -54,7 +52,7 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value);
  * @param value item to insert.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_insert_and_replace(hash_table *ht, const char *key, void *value);
+int hash_table_insert_or_update(hash_table *ht, const char *key, void *value);
 
 /**
  * Search for an entry in the hash table.
@@ -64,7 +62,7 @@ int hash_table_insert_and_replace(hash_table *ht, const char *key, void *value);
  * @param value pointer used to get a reference to the entry's value.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_search(hash_table *ht, const char *key, void **value);
+int hash_table_lookup(hash_table *ht, const char *key, void **value);
 
 /**
  * Delete an entry from the hash table.
@@ -84,7 +82,7 @@ int hash_table_delete(hash_table *ht, const char *key);
  * @param key where to store the key of entry.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_get_entry_key(hash_table_entry *entry, char **key);
+int hash_table_entry_key(hash_table_entry *entry, char **key);
 
 /**
  * Retreive the value from the given hash table entry.
@@ -95,7 +93,7 @@ int hash_table_get_entry_key(hash_table_entry *entry, char **key);
  * @param value where to store the value of entry.
  * @return 0 on success, 1 otherwise
  */
-int hash_table_get_entry_value(hash_table_entry *entry, void **value);
+int hash_table_entry_value(hash_table_entry *entry, void **value);
 
 /**
  * Allocate necessary resources and setup.

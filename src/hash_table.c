@@ -15,20 +15,18 @@ struct hash_table_entry {
 };
 
 struct hash_table {
-  hash_table_entry *entries; // array of entries
-  unsigned int (*hashfn)(const char *,
-                         unsigned int); // function to generate hash code
-  arena *arena;                         // memory block for allocations
-  unsigned size;                        // number of entries
-  unsigned int capacity;                // number of buckets
-  unsigned int data_size;               // sizeo of each item in the buckets
+  hash_table_entry *entries;                          // array of entries
+  unsigned int (*hashfn)(const char *, unsigned int); // used for hash code
+  arena *arena;          // memory block for allocations
+  unsigned size;         // number of entries
+  unsigned int capacity; // number of buckets
 };
 
 struct hash_table_iterator {
   hash_table_entry *entries;
   unsigned size;
   unsigned capacity;
-  unsigned int index;
+  unsigned int index; // current index
 };
 
 /**
@@ -54,10 +52,10 @@ static unsigned int hash(const char *key, unsigned int length) {
  *
  * Used in search/insert/delete operations.
  *
- * @param array of hash table entries.
+ * @param entries array of hash table entries.
  * @param capacity max number of entries the hash table can hold at this time.
  * @param key identifier used to search for.
- * @param key identifier used to search for.
+ * @param hashfn hashing function
  * @return hash table entry to modify.
  */
 static hash_table_entry *
@@ -93,21 +91,23 @@ find_entry(hash_table_entry *entries, unsigned int capacity, const char *key,
  * Resize the hash table after load factor has been reached/exceeded.
  *
  * @param ht hash table to modifiy.
- * @param capacity the new capacity.
  */
-static void resize(hash_table *ht, int capacity) {
+static void resize(hash_table *ht) {
+  const unsigned int old_capacity = ht->capacity;
   hash_table_entry *new_entries =
-      arena_alloc(ht->arena, capacity * sizeof(hash_table_entry),
+      arena_alloc(ht->arena, (ht->capacity <<= 1) * sizeof(hash_table_entry),
                   alignof(hash_table_entry), FALSE);
 
-  for (int i = 0; i < capacity; i++) {
+  // zero out new_entries
+  for (unsigned int i = 0; i < ht->capacity; i++) {
     new_entries[i].key = NULL;
     new_entries[i].value = NULL;
   }
 
-  ht->size = 0;
+  ht->size = 0; // reset size
 
-  for (unsigned i = 0; i < ht->capacity; i++) {
+  // populate the new_entries
+  for (unsigned i = 0; i < old_capacity; i++) {
     hash_table_entry *entry = &ht->entries[i];
 
     if (entry->key == NULL) {
@@ -115,52 +115,26 @@ static void resize(hash_table *ht, int capacity) {
     }
 
     hash_table_entry *dest =
-        find_entry(new_entries, capacity, entry->key, ht->hashfn);
+        find_entry(new_entries, ht->capacity, entry->key, ht->hashfn);
 
     dest->key = entry->key;
     dest->value = entry->value;
     ht->size++;
   }
 
-  // free(ht->entries);
-
   ht->entries = new_entries;
-  ht->capacity = capacity;
 }
 
-int hash_table_create(hash_table **ht, unsigned int initial_capacity,
-                      unsigned int data_size,
-                      unsigned int (*hashfn)(const char *, unsigned int),
-                      arena *arena) {
-  ASSERT(arena != NULL, "arena MUST be provided");
-
-  if ((*ht = arena_alloc(arena, sizeof(hash_table), alignof(hash_table),
-                         FALSE)) == NULL) {
-    return 1;
-  }
-
-  (*ht)->arena = arena;
-  (*ht)->data_size = data_size;
-  (*ht)->size = 0;
-  (*ht)->capacity =
-      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
-  (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
-  (*ht)->entries = NULL;
-
-  return 0;
-}
-
-int hash_table_get_size(hash_table *ht) {
+/**
+ *  This function checks entries array, and checks when to resize is needed.
+ *
+ *  @param ht hash_table to modify
+ *  @param key the hash table entry key to search
+ *  @return hash table entry with 'key', empty entry otherwise
+ */
+static hash_table_entry *handle_pre_insertion(hash_table *ht, const char *key) {
   if (ht == NULL) {
-    return -1;
-  }
-
-  return ht->size;
-}
-
-int hash_table_insert(hash_table *ht, const char *key, const void *value) {
-  if (ht == NULL) {
-    return 1;
+    return NULL;
   }
 
   if (ht->size == 0) {
@@ -178,17 +152,39 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value) {
 
   // Double the capacity of the ht when load factor is reached.
   if (ht->size + 1 >= ht->capacity * HASH_TABLE_LOAD_FACTOR) {
-    resize(ht, ht->capacity * 2);
+    resize(ht);
   }
 
-  hash_table_entry *entry =
-      find_entry(ht->entries, ht->capacity, key, ht->hashfn);
+  return find_entry(ht->entries, ht->capacity, key, ht->hashfn);
+}
+
+int hash_table_create(hash_table **ht, unsigned int initial_capacity,
+                      unsigned int (*hashfn)(const char *, unsigned int),
+                      arena *arena) {
+  ASSERT(arena != NULL, "arena MUST be provided");
+
+  if ((*ht = arena_alloc(arena, sizeof(hash_table), alignof(hash_table),
+                         FALSE)) == NULL) {
+    return 1;
+  }
+
+  (*ht)->arena = arena;
+  (*ht)->size = 0;
+  (*ht)->capacity =
+      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
+  (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
+  (*ht)->entries = NULL;
+
+  return 0;
+}
+
+int hash_table_insert(hash_table *ht, const char *key, const void *value) {
+  hash_table_entry *entry = handle_pre_insertion(ht, key);
   int is_new_key = entry->key == 0;
   int key_length = strlen(key);
 
   if (!is_new_key) {
-    // Key is already found
-    return 1;
+    return 1; // entry with key exists
   }
 
   if (entry->value != (void *)1) {
@@ -204,32 +200,8 @@ int hash_table_insert(hash_table *ht, const char *key, const void *value) {
   return 0;
 }
 
-int hash_table_insert_and_replace(hash_table *ht, const char *key,
-                                  void *value) {
-  if (ht == NULL) {
-    return 1;
-  }
-
-  if (ht->size == 0) {
-    ht->entries =
-        arena_alloc(ht->arena, ht->capacity * sizeof(hash_table_entry),
-                    alignof(hash_table_entry), FALSE);
-
-    // Setting keys and values to NULL indicates the position is empty. As
-    // opposed to a tombstone.
-    for (unsigned int i = 0; i < ht->capacity; i++) {
-      ht->entries[i].key = NULL;
-      ht->entries[i].value = NULL;
-    }
-  }
-
-  // Double the capacity of the ht when load factor is reached.
-  if (ht->size + 1 >= ht->capacity * HASH_TABLE_LOAD_FACTOR) {
-    resize(ht, ht->capacity * 2);
-  }
-
-  hash_table_entry *entry =
-      find_entry(ht->entries, ht->capacity, key, ht->hashfn);
+int hash_table_insert_or_update(hash_table *ht, const char *key, void *value) {
+  hash_table_entry *entry = handle_pre_insertion(ht, key);
   int is_new_key = entry->key == NULL;
   int key_length = strlen(key);
 
@@ -248,16 +220,13 @@ int hash_table_insert_and_replace(hash_table *ht, const char *key,
   return 0;
 }
 
-int hash_table_search(hash_table *ht, const char *key, void **value) {
+int hash_table_lookup(hash_table *ht, const char *key, void **value) {
   if (ht == NULL || ht->size == 0) {
     return 1;
   }
 
-  if (strlen(key) == 0) {
-    if (value != NULL) {
-      // Ignore value
-      *value = NULL;
-    }
+  if (strlen(key) == 0) { // key is invalid
+    *value = NULL;
     return 1;
   }
 
@@ -265,17 +234,11 @@ int hash_table_search(hash_table *ht, const char *key, void **value) {
       find_entry(ht->entries, ht->capacity, key, ht->hashfn);
 
   if (entry->key == NULL) {
-    if (value != NULL) {
-      // Ignore value
-      *value = NULL;
-    }
+    *value = NULL;
     return 1;
   }
 
-  if (value != NULL) {
-    // Ignore value
-    *value = entry->value;
-  }
+  *value = entry->value;
 
   return 0;
 }
@@ -288,37 +251,40 @@ int hash_table_delete(hash_table *ht, const char *key) {
   hash_table_entry *entry =
       find_entry(ht->entries, ht->capacity, key, ht->hashfn);
 
-  // Key not found, there is no entry to delete.
-  if (entry->key == NULL) {
+  if (entry->key == NULL) { // Key not found, there is no entry to delete.
     return 1;
   }
 
-  ht->size--;
+  ht->size--; // decrement hash table size
 
   entry->key = NULL;
-
-  // entry value of 1 means the entry is a tombstone .
-  entry->value = (void *)1;
+  entry->value = (void *)1; // entry value of 1 means the entry is a tombstone.
 
   return 0;
 }
 
-int hash_table_get_entry_key(hash_table_entry *entry, char **key) {
+int hash_table_size(hash_table *ht) {
+  if (ht == NULL) {
+    return -1;
+  }
+
+  return ht->size;
+}
+
+int hash_table_entry_key(hash_table_entry *entry, char **key) {
   if (entry == NULL) {
     *key = NULL;
     return 1;
   }
-
   *key = entry->key;
   return 0;
 }
 
-int hash_table_get_entry_value(hash_table_entry *entry, void **value) {
+int hash_table_entry_value(hash_table_entry *entry, void **value) {
   if (entry == NULL) {
     *value = NULL;
     return 1;
   }
-
   *value = entry->value;
   return 0;
 }
