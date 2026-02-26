@@ -15,10 +15,12 @@ typedef struct string_builder string_builder;
  * Allocate necessary resources and setup.
  *
  * @param sb string_builder to create.
- * @param arena memory block for allocations 
+ * @param initial_capacity size of string builder before resizing
+ * @param arena memory block for allocations
  * @return 0 on success, 1 otherwise
  */
-int string_builder_create(string_builder **sb, arena *arena);
+int string_builder_create(string_builder **sb, unsigned int initial_capacity,
+                          arena *arena);
 
 /**
  * @brief Append a string to the string builder.
@@ -46,8 +48,7 @@ int string_builder_append_char(string_builder *sb, const char ch);
  * @param ... variable number of arguments.
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append_fmt_str(string_builder *sb,
-                                           const char *format, ...);
+int string_builder_append_fmt_str(string_builder *sb, const char *format, ...);
 
 /**
  * @brief Append a string view to the string builder

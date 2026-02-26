@@ -14,7 +14,8 @@ struct string_builder {
   arena *arena;          // memory block used for allocations
 };
 
-int string_builder_create(string_builder **sb, arena *arena) {
+int string_builder_create(string_builder **sb, unsigned int initial_capacity,
+                          arena *arena) {
   if (((*sb) = arena_alloc(arena, sizeof(string_builder),
                            alignof(string_builder), FALSE)) == NULL) {
     return 1;
@@ -22,7 +23,8 @@ int string_builder_create(string_builder **sb, arena *arena) {
 
   (*sb)->arena = arena;
 
-  return dynamic_array_create(&(*sb)->string, 16, sizeof(char), NULL, arena);
+  return dynamic_array_create(&(*sb)->string, initial_capacity, sizeof(char),
+                              NULL, arena);
 }
 
 int string_builder_append(string_builder *sb, const char *str) {
