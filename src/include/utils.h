@@ -1,11 +1,3 @@
-/**
- * @file utils.h
- *
- * Helper macros
- *
- * @date 1/17/2026
- */
-
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -42,5 +34,24 @@
             __FILE__, __LINE__, __func__, message);                            \
     abort();                                                                   \
   } while (0)
+
+/**
+ * Return power of two, greater than 'n' or 'n' if itself is a power of 2.
+ * Use compound statement ({}) to use assignments
+ *
+ * @note add 'temp |= temp >> 32;' for 64bit usage
+ *
+ * @param n integer to check
+ */
+#define ROUND_POW2(n)                                                          \
+  ((n) <= 0 ? 1 : ({                                                           \
+    int temp = (n) - 1;                                                        \
+    temp |= temp >> 1;                                                         \
+    temp |= temp >> 2;                                                         \
+    temp |= temp >> 4;                                                         \
+    temp |= temp >> 8;                                                         \
+    temp |= temp >> 16;                                                        \
+    temp + 1;                                                                  \
+  }))
 
 #endif // UTILS_H

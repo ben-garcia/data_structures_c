@@ -1,4 +1,5 @@
 #include "include/dynamic_array.h"
+#include "include/utils.h"
 
 #include <stdalign.h>
 #include <string.h>
@@ -49,8 +50,7 @@ int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
     return 1;
   }
 
-  (*array)->capacity =
-      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
+  (*array)->capacity = ROUND_POW2(initial_capacity);
   (*array)->data_size = data_size;
   (*array)->matchfn = matchfn;
   (*array)->arena = arena;

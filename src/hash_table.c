@@ -168,10 +168,9 @@ int hash_table_create(hash_table **ht, unsigned int initial_capacity,
     return 1;
   }
 
+  (*ht)->capacity = ROUND_POW2(initial_capacity);
   (*ht)->arena = arena;
   (*ht)->size = 0;
-  (*ht)->capacity =
-      (initial_capacity <= 0) ? 16 : initial_capacity; // initial capacity
   (*ht)->hashfn = hashfn == NULL ? hash : hashfn;
   (*ht)->entries = NULL;
 

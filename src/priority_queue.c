@@ -1,4 +1,5 @@
 #include "include/priority_queue.h"
+#include "include/utils.h"
 #include <stdalign.h>
 #include <string.h>
 
@@ -158,7 +159,7 @@ int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
     return 1;
   }
 
-  (*pq)->capacity = (initial_capacity <= 0) ? 16 : initial_capacity;
+  (*pq)->capacity = ROUND_POW2(initial_capacity);
   (*pq)->arena = arena;
   (*pq)->comparefn = comparefn == NULL ? build_max_heap : comparefn;
   (*pq)->size = 0;
