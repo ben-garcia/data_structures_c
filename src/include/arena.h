@@ -43,11 +43,11 @@ typedef struct arena arena;
  * @brief Reserves the virtual Memory Area but doesn't commit any physical
  * memory yet.
  *
- * @param a the arena to modify
+ * @param arena memory block for de-allocate
  * @param reserve_size size of the Virtual Memory Area.
  * @return 0 on success, 1 otherwise
  */
-int arena_create(arena **a, size_t reserve_size);
+int arena_create(arena **arena, uint64_t reserve_size);
 
 /**
  * @brief Commit 'size' from the Virtual Memory Area.
@@ -58,26 +58,26 @@ int arena_create(arena **a, size_t reserve_size);
  * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly committed memory.
  */
-void *arena_alloc(arena *arena, size_t size, size_t alignment,
+void *arena_alloc(arena *arena, uint64_t size, size_t alignment,
                   unsigned int zero_out);
 
 /**
  * @brief Commit 'size' from the Virtual Memory Area.
  *
- * @param a arena to modify
+ * @param arena memory block for de-allocate
  * @param old_ptr start of memory chuck to reallocate
  * @param old_size size of the old memory block
  * @param new_size size of the new memory block
  * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly resized memory block
  */
-void *arena_realloc(arena *a, void *old_ptr, const size_t old_size,
-                    const size_t new_size, unsigned int zero_out);
+void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
+                    const uint64_t new_size, unsigned int zero_out);
 
 /**
  * @brief Indicate the next allocations are temporary
  *
- * @param a arena to modify
+ * @param arena arena to modify
  * @return 0 on success, 1 otherwise
  */
 int arena_start_scratch_arena(arena *a);
@@ -87,25 +87,25 @@ int arena_start_scratch_arena(arena *a);
  *
  * Used to reset the arena after scratch arena is no longer needed
  *
- * @param a arena to modify
+ * @param arena memory block for de-allocate
  * @return 0 on success, 1 otherwise
  */
-int arena_end_scratch_arena(arena *a);
+int arena_end_scratch_arena(arena *arena);
 
 /**
  * @brief reset the arena
  *
- * @param a arena to modify
+ * @param arena memory block for de-allocate
  * @return 0 on success, 1 otherwise
  */
-int arena_reset(arena *a);
+int arena_reset(arena *arena);
 
 /**
  * @brief Deallocate memory used
  *
- * @param a arena to de-allocate
+ * @param arena memory block for de-allocate
  * @return 0 on success, 1 otherwise
  */
-int arena_destroy(arena **a);
+int arena_destroy(arena **arena);
 
 #endif // ARENA_H

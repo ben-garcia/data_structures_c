@@ -21,29 +21,12 @@ struct arena {
  */
 static long get_page_size() { return sysconf(_SC_PAGESIZE); }
 
-static void *align_forward(uint8_t *address, uint64_t alignment) {
-  uintptr_t addr =
-      (uintptr_t)address; // Convert to integer type for calculation
-
-  // Ensure alignment is a power of 2
-  // if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
-  if (alignment == 0 || IS_POWER_OF_TWO(alignment) != 0) {
-    return NULL; // Invalid alignment
-  }
-
-  // Calculate the next aligned address
-  uintptr_t aligned_addr = ALIGN_UP_POW2(addr, alignment);
-  // uintptr_t aligned_addr = (addr + alignment - 1) & ~(alignment - 1);
-
-  return (void *)aligned_addr; // Cast back to void pointer
-}
-
-int arena_create(arena **a, size_t reserve_size) {
+int arena_create(arena **a, uint64_t reserve_size) {
   if (((*a) = malloc(sizeof(arena))) == NULL) {
     return 1;
   }
 
-  const size_t page_size = get_page_size();
+  const uint32_t page_size = get_page_size();
 
   /// Align reservation up to the nearest page size
   // Align to a page boundary
@@ -66,32 +49,29 @@ int arena_create(arena **a, size_t reserve_size) {
   return 0;
 }
 
-void *arena_alloc(arena *a, uint64_t size, uint64_t alignment,
+void *arena_alloc(arena *arena, uint64_t size, uint64_t alignment,
                   unsigned int zero_out) {
-  if (a == NULL || size <= 0 || IS_POWER_OF_TWO(alignment) != 0) {
+  if (arena == NULL || size <= 0 || IS_POWER_OF_TWO(alignment) != 0) {
     return NULL;
   }
 
-  uint64_t aligned_ptr =
-      (uint64_t)align_forward(a->base_ptr + a->offset, alignment);
-  (void)aligned_ptr;
-  const size_t page_size = get_page_size();
-  const size_t new_offset = a->offset + size;
-  if (new_offset > a->reserved_size) {
+  const uint32_t page_size = get_page_size();
+  const uint64_t new_offset = arena->offset + size;
+  if (new_offset > arena->reserved_size) {
     return NULL; // Out of reserved space
   }
 
   // check Virutal Memory Area has been commited.
-  if (new_offset > a->committed_size) {
+  if (new_offset > arena->committed_size) {
     // Align the required commit size up to nearest page
-    size_t new_commit_target = ALIGN_UP_POW2(new_offset, page_size);
+    uint64_t new_commit_target = ALIGN_UP_POW2(new_offset, page_size);
     // Clamp to the reservation limit
-    if (new_commit_target > a->reserved_size) {
-      new_commit_target = a->reserved_size;
+    if (new_commit_target > arena->reserved_size) {
+      new_commit_target = arena->reserved_size;
     }
 
-    const size_t size_to_commit = new_commit_target - a->committed_size;
-    void *commit_start_addr = a->base_ptr + a->committed_size;
+    const uint64_t size_to_commit = new_commit_target - arena->committed_size;
+    void *commit_start_addr = arena->base_ptr + arena->committed_size;
 
     // Allocate phsycial memory pages(4KB) to the reserved Virtual Memory Area.
     if (mprotect(commit_start_addr, size_to_commit, PROT_READ | PROT_WRITE) !=
@@ -99,11 +79,11 @@ void *arena_alloc(arena *a, uint64_t size, uint64_t alignment,
       return NULL;
     }
 
-    a->committed_size = new_commit_target;
+    arena->committed_size = new_commit_target;
   }
 
-  void *memory = a->base_ptr + a->offset;
-  a->offset = new_offset;
+  void *memory = arena->base_ptr + arena->offset;
+  arena->offset = new_offset;
 
   if (zero_out == 1) {
     memset(memory, 0, size);
@@ -112,15 +92,14 @@ void *arena_alloc(arena *a, uint64_t size, uint64_t alignment,
   return memory;
 }
 
-void *arena_realloc(arena *a, void *old_ptr, const size_t old_size,
-                    const size_t new_size, unsigned int zero_out) {
-  if ((new_size == 0) || ((a->offset + new_size) > a->reserved_size)) {
+void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
+                    const uint64_t new_size, unsigned int zero_out) {
+  if ((new_size == 0) || ((arena->offset + new_size) > arena->reserved_size)) {
     return NULL; // out of space
   }
 
-  void *memory = a->base_ptr + a->offset;
-  a->offset += new_size; // update offset
-  memcpy(memory, old_ptr, old_size);
+  void *memory = arena_alloc(arena, new_size, sizeof(void *), 0);
+  memcpy(memory, old_ptr, old_size); // 
 
   if (zero_out == 1) {
     // zero out memory past old data
