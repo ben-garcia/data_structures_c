@@ -34,7 +34,7 @@ static int dynamic_array_resize(dynamic_array **array) {
 
   if (((*array)->items = arena_realloc(
            (*array)->arena, (*array)->items, old_capacity * (*array)->data_size,
-           (*array)->data_size * ((*array)->capacity <<= 1), TRUE)) == NULL) {
+           (*array)->data_size * ((*array)->capacity <<= 1), FALSE)) == NULL) {
     return 1;
   }
 

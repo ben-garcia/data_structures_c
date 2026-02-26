@@ -92,7 +92,7 @@ find_entry(hash_table_entry *entries, unsigned int capacity, const char *key,
  *
  * @param ht hash table to modifiy.
  */
-static void resize(hash_table *ht) {
+static void hash_table_resize(hash_table *ht) {
   const unsigned int old_capacity = ht->capacity;
   hash_table_entry *new_entries =
       arena_alloc(ht->arena, (ht->capacity <<= 1) * sizeof(hash_table_entry),
@@ -152,7 +152,7 @@ static hash_table_entry *handle_pre_insertion(hash_table *ht, const char *key) {
 
   // Double the capacity of the ht when load factor is reached.
   if (ht->size + 1 >= ht->capacity * HASH_TABLE_LOAD_FACTOR) {
-    resize(ht);
+    hash_table_resize(ht);
   }
 
   return find_entry(ht->entries, ht->capacity, key, ht->hashfn);

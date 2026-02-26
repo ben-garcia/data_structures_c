@@ -63,7 +63,7 @@ struct priority_queue {
  * @param pq priority queue
  * @return 0 on success, 1 otherwise
  */
-static int resize(priority_queue **pq) {
+static int priority_queue_resize(priority_queue **pq) {
   unsigned int old_capacity = (*pq)->capacity;
 
   if (((*pq)->items = arena_realloc(
@@ -178,7 +178,7 @@ int priority_queue_insert(priority_queue *pq, void *data) {
   }
 
   if (pq->size == pq->capacity) {
-    if (resize(&pq) != 0) {
+    if (priority_queue_resize(&pq) != 0) {
       return 1;
     }
   }
