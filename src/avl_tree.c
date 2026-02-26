@@ -338,7 +338,7 @@ int avl_tree_create(avl_tree **tree,
   return 0;
 }
 
-unsigned int avl_tree_get_size(avl_tree *tree) { return tree->size; }
+unsigned int avl_tree_size(avl_tree *tree) { return tree->size; }
 
 int avl_tree_insert(avl_tree *tree, void *data) {
   int result = 1;

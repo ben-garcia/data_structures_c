@@ -37,7 +37,7 @@ int stack_pop(stack *s);
  * @param s the stack to initialize
  * @return the size of the stack
  */
-int stack_get_size(stack *s);
+int stack_size(stack *s);
 
 /**
  * @brief Check if 's' is empty

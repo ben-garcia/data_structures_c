@@ -82,7 +82,7 @@ int string_builder_append_view(string_builder *sb, const string_view *view) {
 }
 
 int string_builder_build(string_builder *sb, char **buffer) {
-  int bytes = sizeof(char) * dynamic_array_get_size(sb->string);
+  int bytes = sizeof(char) * dynamic_array_size(sb->string);
 
   if (((*buffer) = arena_alloc(sb->arena, bytes + 1, alignof(char), FALSE)) ==
       NULL) {

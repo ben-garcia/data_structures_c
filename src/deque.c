@@ -158,7 +158,7 @@ int deque_peek_back(deque *d, void **data) {
   return 0;
 }
 
-int deque_get_size(deque *d) {
+int deque_size(deque *d) {
   if (d == NULL) {
     return -1;
   }

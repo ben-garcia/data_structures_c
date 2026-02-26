@@ -130,7 +130,7 @@ int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
   return 0;
 }
 
-int dynamic_array_get_size(dynamic_array *array) {
+int dynamic_array_size(dynamic_array *array) {
   if (array == NULL) {
     return -1;
   }

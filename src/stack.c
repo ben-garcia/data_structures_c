@@ -78,7 +78,7 @@ int stack_pop(stack *s) {
   return 0;
 }
 
-int stack_get_size(stack *s) { return s->size; }
+int stack_size(stack *s) { return s->size; }
 
 int stack_is_empty(stack *s) { return !(s->size == 0); }
 

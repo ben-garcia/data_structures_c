@@ -91,17 +91,17 @@ int main(void) {
   string_view_create(&str_view, " and Hello", permanent_arena);
   char *buffer;
 
-  string_builder_create(&sb, permanent_arena);
+  string_builder_create(&sb, 16, permanent_arena);
   string_builder_append(sb, "Hello World!");
   string_builder_append_view(sb, str_view);
   string_builder_append_fmt_str(sb, "%s", " C!");
   string_builder_build(sb, &buffer);
 
   // string view
-  string_view *view ;
-  string_view_create(&view, buffer,permanent_arena);
+  string_view *view;
+  string_view_create(&view, buffer, permanent_arena);
   string_view *view2;
-  string_view_create(&view2, "Testing",permanent_arena);
+  string_view_create(&view2, "Testing", permanent_arena);
   char *view_buffer;
   char *view2_buffer;
   string_view_to_string(view, &view_buffer);
@@ -156,7 +156,7 @@ int main(void) {
 
   printf("===========hash_table(char)==============\n");
   hash_table *chars;
-  hash_table_create(&chars, 32, sizeof(char), NULL, permanent_arena);
+  hash_table_create(&chars, 32, NULL, permanent_arena);
 
   for (char c = 'a'; c <= 'z'; c++) {
     char *c_ptr =
@@ -172,8 +172,8 @@ int main(void) {
   while ((hash_table_iterator_next(chars_it, &entry)) == 0) {
     char *cvalue;
     char *ckey;
-    hash_table_get_entry_key(entry, &ckey);
-    hash_table_get_entry_value(entry, (void **)&cvalue);
+    hash_table_entry_key(entry, &ckey);
+    hash_table_entry_value(entry, (void **)&cvalue);
     printf("{%s: %c} ", ckey, *cvalue);
   }
 

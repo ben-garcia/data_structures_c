@@ -54,7 +54,7 @@ int avl_tree_delete(avl_tree *tree, void *data);
  * @param tree the AVL tree
  * @return the size of AVL 'tree'
  */
-unsigned int avl_tree_get_size(avl_tree *tree);
+unsigned int avl_tree_size(avl_tree *tree);
 
 /**
  * @brief Deallocate the resources

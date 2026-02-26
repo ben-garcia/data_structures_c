@@ -72,7 +72,7 @@ int deque_peek_back(deque *d, void **data);
  * @param d the deque
  * @return the size of the queue, -1 otherwise
  */
-int deque_get_size(deque *d);
+int deque_size(deque *d);
 
 /**
  * @brief Check if 'd' is empty

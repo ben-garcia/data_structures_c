@@ -70,7 +70,7 @@ int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
  * @param array the array to access.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_get_size(dynamic_array *array);
+int dynamic_array_size(dynamic_array *array);
 
 /**
  * @brief Check if array is empty.

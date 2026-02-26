@@ -100,7 +100,7 @@ int queue_peek(queue *q, void **data) {
   return 0;
 }
 
-int queue_get_size(queue *q) {
+int queue_size(queue *q) {
   if (q == NULL) {
     return -1;
   }

@@ -46,7 +46,7 @@ int queue_peek(queue *q, void **data);
  * @param q the queue
  * @return the size of the queue, -1 otherwise
  */
-int queue_get_size(queue *q);
+int queue_size(queue *q);
 
 /**
  * @brief Check if 'q' is empty
