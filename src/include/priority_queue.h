@@ -47,6 +47,14 @@ int priority_queue_peek(priority_queue *pq, void **data);
 int priority_queue_delete(priority_queue *pq);
 
 /**
+ * @brief Return the size of 'pq'
+ *
+ * @param pq the priority queue
+ * @return the size of the priority queue, -1 otherwise
+ */
+int priority_queue_size(priority_queue *pq);
+
+/**
  * @brief Check if 'pq' is empty
  *
  * @param pq the priority_queue to modify

@@ -171,7 +171,15 @@ int linked_list_reverse(linked_list **list) {
   return 0;
 }
 
-void *linked_list_get_node_data(linked_list_node *node) {
+int linked_list_size(linked_list *list) {
+  if (list == NULL) {
+    return -1;
+  }
+
+  return list->size;
+}
+
+void *linked_list_node_data(linked_list_node *node) {
   if (node == NULL) {
     return NULL;
   }

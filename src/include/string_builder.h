@@ -69,6 +69,14 @@ int string_builder_append_view(string_builder *sb, const string_view *view);
 int string_builder_build(string_builder *sb, char **buffer);
 
 /**
+ * @brief Return the size of 'sb'
+ *
+ * @param sb the string builder to check
+ * @return 'sb' size, -1 otherwise
+ */
+int string_builder_size(const string_builder *sb);
+
+/**
  * @brief Check if string_builder is empty.
  *
  * @param sb string_builder to check.

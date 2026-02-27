@@ -98,6 +98,10 @@ int string_builder_build(string_builder *sb, char **buffer) {
   return 0;
 }
 
+int string_builder_size(const string_builder *sb) {
+  return dynamic_array_size(sb->string);
+}
+
 int string_builder_is_empty(string_builder *sb) {
   return dynamic_array_is_empty(sb->string);
 }

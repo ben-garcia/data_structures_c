@@ -54,9 +54,17 @@ int linked_list_remove(linked_list *list, void *data);
  * Useful to iterate through in the order items were added
  *
  * @param list linked list to modify
- * @return 0 on success, 1 otherwise
+ * @return number of elements, -1 otherwise 
  */
 int linked_list_reverse(linked_list **list);
+
+/**
+ * @brief Retrive the number of nodes in 'list'.
+ *
+ * @param list the linked list to check.
+ * @return 0 on success, 1 otherwise
+ */
+int linked_list_size(linked_list *list);
 
 /**
  * @brief Allocate necessary resources and setup.

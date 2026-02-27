@@ -212,6 +212,14 @@ int priority_queue_delete(priority_queue *pq) {
   return 0;
 }
 
+int priority_queue_size(priority_queue *pq) {
+  if (pq == NULL) {
+    return -1;
+  }
+
+  return pq->size;
+}
+
 int priority_queue_is_empty(priority_queue *pq) {
   if (pq == NULL) {
     return 1;

@@ -68,7 +68,7 @@ int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
  * @brief Retrive the number of elements in the array.
  *
  * @param array the array to access.
- * @return 0 on success, 1 otherwise
+ * @return number of elements, -1 otherwise 
  */
 int dynamic_array_size(dynamic_array *array);
 
