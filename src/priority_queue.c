@@ -1,5 +1,5 @@
-#include "include/priority_queue.h"
-#include "include/utils.h"
+#include "priority_queue.h"
+#include "utils.h"
 #include <stdalign.h>
 #include <string.h>
 

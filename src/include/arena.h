@@ -3,7 +3,7 @@
 
  * @brief Arena allocator implementation using demand paging.
  *
- * Reserve a large Virtual Memory Area but commit only what is required.
+ * Reserve a large Virtual Memory Area but commit only what is needed.
  *
  * @date 1/19/2026
  */

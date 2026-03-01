@@ -1,4 +1,4 @@
-#include "include/arena.h"
+#include "arena.h"
 #include <string.h>
 
 #define IS_POWER_OF_TWO(n) ((uint64_t)(n) & ((uint64_t)(n) - 1))
@@ -102,8 +102,8 @@ void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
   if ((memory = arena_alloc(arena, new_size, sizeof(void *), 0)) == NULL) {
     return NULL;
   }
-  
-  memcpy(memory, old_ptr, old_size); // 
+
+  memcpy(memory, old_ptr, old_size); //
 
   if (zero_out == 1) {
     // zero out memory past old data

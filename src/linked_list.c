@@ -1,4 +1,4 @@
-#include "include/linked_list.h"
+#include "linked_list.h"
 
 #include <stdalign.h>
 #include <stdio.h>

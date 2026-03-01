@@ -1,4 +1,4 @@
-#include "include/deque.h"
+#include "deque.h"
 #include <stdalign.h>
 
 #define FALSE 0

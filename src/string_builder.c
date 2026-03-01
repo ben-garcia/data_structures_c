@@ -1,5 +1,5 @@
-#include "include/string_builder.h"
-#include "include/dynamic_array.h"
+#include "string_builder.h"
+#include "dynamic_array.h"
 
 #include <stdalign.h>
 #include <stdarg.h>
@@ -90,7 +90,7 @@ int string_builder_build(string_builder *sb, char **buffer) {
   }
 
   void *item = NULL;
-  dynamic_array_find_ref(sb->string, 0, &item);
+  dynamic_array_find_by_index(sb->string, 0, &item);
 
   memcpy(*buffer, item, bytes);
   (*buffer)[bytes] = '\0';

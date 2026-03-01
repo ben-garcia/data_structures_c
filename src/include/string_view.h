@@ -2,7 +2,6 @@
 #define STRING_VIEW_H
 
 #include "arena.h"
-#include <string.h>
 
 typedef struct string_view string_view;
 

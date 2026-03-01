@@ -1,4 +1,4 @@
-#include "include/stack.h"
+#include "stack.h"
 #include <stdalign.h>
 
 #define FALSE 0
