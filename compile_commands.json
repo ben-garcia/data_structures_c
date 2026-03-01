@@ -1,0 +1,401 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/arena.o",
+      "src/arena.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/arena.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/arena.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/avl_tree.o",
+      "src/avl_tree.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/avl_tree.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/avl_tree.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/deque.o",
+      "src/deque.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/deque.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/deque.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/dynamic_array.o",
+      "src/dynamic_array.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/dynamic_array.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/dynamic_array.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/hash_table.o",
+      "src/hash_table.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/hash_table.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/hash_table.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/linked_list.o",
+      "src/linked_list.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/linked_list.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/linked_list.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/priority_queue.o",
+      "src/priority_queue.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/priority_queue.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/priority_queue.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/queue.o",
+      "src/queue.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/queue.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/queue.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/stack.o",
+      "src/stack.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/stack.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/stack.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/string_builder.o",
+      "src/string_builder.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/string_builder.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/string_builder.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-c",
+      "-o",
+      "build/obj/string_view.o",
+      "src/string_view.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/src/string_view.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/obj/string_view.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/avl_tree",
+      "examples/avl_tree.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/avl_tree.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/avl_tree"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/deque",
+      "examples/deque.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/deque.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/deque"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/dynamic_array",
+      "examples/dynamic_array.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/dynamic_array.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/dynamic_array"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/hash_table",
+      "examples/hash_table.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/hash_table.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/hash_table"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/linked_list",
+      "examples/linked_list.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/linked_list.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/linked_list"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/priority_queue",
+      "examples/priority_queue.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/priority_queue.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/priority_queue"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/queue",
+      "examples/queue.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/queue.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/queue"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/stack",
+      "examples/stack.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/stack.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/stack"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/string_builder",
+      "examples/string_builder.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/string_builder.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/string_builder"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fPIC",
+      "-g",
+      "-O0",
+      "-Isrc/include",
+      "-o",
+      "build/bin/string_view",
+      "examples/string_view.c"
+    ],
+    "directory": "/home/ben/Workspace/data_structures_c",
+    "file": "/home/ben/Workspace/data_structures_c/examples/string_view.c",
+    "output": "/home/ben/Workspace/data_structures_c/build/bin/string_view"
+  }
+]
