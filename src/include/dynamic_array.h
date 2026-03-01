@@ -12,10 +12,8 @@ typedef struct dynamic_array_iterator dynamic_array_iterator;
  * @param array dynamic_array to create.
  * @param initial_capacity size of array before resizing
  * @param data_size Size in bytes of each value stored.
- * @param matchfn comparison function used for 'linked_list_find'
- *        MUST return 0 if a == b,
- *             negative number if a < b
- *             positive number if a > b,
+ * @param matchfn comparison function
+ *        MUST return 0 when a == b
  * @param arena memory block used for allocations
  * @return 0 on success, 1 otherwise
  */
@@ -33,7 +31,7 @@ int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
 int dynamic_array_add(dynamic_array *array, const void *item);
 
 /**
- * Add a multiple elements to the array.
+ * @brief Add a multiple elements to the array.
  *
  * @param array dynamic_array to modify.
  * @param items the elements to add.
@@ -44,31 +42,42 @@ int dynamic_array_add_many(dynamic_array *array, void **items,
                            unsigned int length);
 
 /**
- * Get the value at a given index.
+ * @brief Get the value at a given index.
  *
  * @param array dynamic_array to modify.
  * @param index Index to access.
  * @param item Where to store the value.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_find(dynamic_array *array, unsigned int index, void **item);
+int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
+                                void **item);
 
 /**
- * Get a reference to the element at a given index.
+ * @brief Search the array using matchfn
+ *
+ * @param array dynamic_array to modify.
+ * @param data item to check
+ * @param item Where to store the value.
+ * @return 0 on success, 1 otherwise
+ */
+int dynamic_array_find(dynamic_array *array, void *data, void **item);
+
+/**
+ * @brief Get a reference to the element at a given index.
  *
  * @param array dynamic_array to modify.
  * @param index Index to access.
  * @param item Where to store the value.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
-                           void **item);
+// int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
+//                         void **item);
 
 /**
  * @brief Retrive the number of elements in the array.
  *
  * @param array the array to access.
- * @return number of elements, -1 otherwise 
+ * @return number of elements, -1 otherwise
  */
 int dynamic_array_size(dynamic_array *array);
 
@@ -87,7 +96,17 @@ int dynamic_array_is_empty(dynamic_array *array);
  * @param index Index to access.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_remove(dynamic_array *array, unsigned int index);
+
+int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index);
+
+/**
+ * @brief Remove an element using matchfn
+ *
+ * @param array dynamic_array to modify.
+ * @param data item to search for
+ * @return 0 on success, 1 otherwise
+ */
+int dynamic_array_remove(dynamic_array *array, void *data);
 
 /**
  * @brief Reallocate to only take up the necessary memory to hold the current

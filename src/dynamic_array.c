@@ -1,5 +1,5 @@
-#include "include/dynamic_array.h"
-#include "include/utils.h"
+#include "dynamic_array.h"
+#include "utils.h"
 
 #include <stdalign.h>
 #include <string.h>
@@ -17,9 +17,7 @@ struct dynamic_array {
 };
 
 struct dynamic_array_iterator {
-  void **items;
-  unsigned data_size;
-  unsigned size;
+  dynamic_array *array;
   unsigned index; // current element iterator is pointing to.
 };
 
@@ -89,7 +87,7 @@ int dynamic_array_add_many(dynamic_array *array, void **items,
     return 1;
   }
 
-  if (dynamic_array_is_empty(array)) {
+  if (array->size == 0) {
     array->items = arena_alloc(array->arena, array->capacity * array->data_size,
                                alignof(void *), FALSE);
   }
@@ -107,28 +105,59 @@ int dynamic_array_add_many(dynamic_array *array, void **items,
   return 0;
 }
 
-int dynamic_array_find(dynamic_array *array, unsigned int index, void **item) {
-  // array must be defined.
-  if (array == NULL || dynamic_array_is_empty(array) || index >= array->size) {
-    return 1;
-  }
-
-  memcpy(*item, array->items + index, array->data_size);
-
-  return 0;
-}
-
-int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
-                           void **item) {
+int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
+                                void **item) {
   // array must be defined.
   if (array == NULL || array->size == 0 || index >= array->size) {
     return 1;
   }
 
-  *item = (void *)array->items + index * array->data_size;
+  // FIX: return copy of data of the element
+  // memcpy(*item, array->items[index], array->data_size);
+  *item = array->items[index];
 
   return 0;
 }
+
+int dynamic_array_find(dynamic_array *array, void *data, void **item) {
+  // array must be defined.
+  if (array == NULL || array->size == 0 || data == NULL) {
+    *item = NULL;
+    return 1;
+  }
+
+  long int index = -1;
+
+  for (unsigned int i = 0; i < array->size; i++) {
+    if (array->matchfn(array->items[i], data) == 0) {
+      index = i;
+      break;
+    }
+  }
+
+  if (index < 0) {
+    *item = NULL;
+    return 1;
+  }
+
+  // FIX: return copy of data of the element
+  // memcpy(*item, array->items[index], array->data_size);
+  *item = array->items[index];
+
+  return 0;
+}
+
+// int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
+//                            void **item) {
+//   // array must be defined.
+//   if (array == NULL || array->size == 0 || index >= array->size) {
+//     return 1;
+//   }
+//
+//   *item = (void *)array->items + index * array->data_size;
+//
+//   return 0;
+// }
 
 int dynamic_array_size(dynamic_array *array) {
   if (array == NULL) {
@@ -137,17 +166,45 @@ int dynamic_array_size(dynamic_array *array) {
   return array->size;
 }
 
-int dynamic_array_is_empty(dynamic_array *array) { return array->size == 0; }
+int dynamic_array_is_empty(dynamic_array *array) { return !(array->size == 0); }
 
-int dynamic_array_remove(dynamic_array *array, unsigned int index) {
+int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
   // array must be defined.
-  if (array == NULL || dynamic_array_is_empty(array) || index >= array->size) {
+  if (array == NULL || array->size == 0 || index >= array->size) {
     return 1;
   }
 
+  memcpy(array->items[index], array->items[index + 1],
+         array->data_size * (array->size - index));
+
   array->size--;
-  memmove(array->items + index, array->items + index + 1,
-          array->data_size * array->size);
+
+  return 0;
+}
+
+int dynamic_array_remove(dynamic_array *array, void *data) {
+  // array must be defined.
+  if (array == NULL || array->size == 0 || array->matchfn == NULL ||
+      data == NULL) {
+    return 1;
+  }
+
+  long int index = -1;
+
+  for (unsigned int i = 0; i < array->size; i++) {
+    if (array->matchfn(array->items[i], data) == 0) {
+      index = i;
+      break;
+    }
+  }
+
+  if (index < 0) {
+    return 1;
+  }
+
+  memcpy(array->items[index], array->items[index + 1],
+         array->data_size * (array->size - index));
+  array->size--;
 
   return 0;
 }
@@ -159,21 +216,19 @@ int dynamic_array_iterator_create(dynamic_array_iterator **it,
     return 1;
   }
 
-  (*it)->items = array->items;
-  (*it)->size = array->size;
-  (*it)->data_size = array->data_size;
+  (*it)->array = array;
   (*it)->index = 0;
 
   return 0;
 }
 
 int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item) {
-  if (it->size == 0 || it->index >= it->size) {
+  if (it->array->size == 0 || it->index >= it->array->size) {
     return 1;
   }
 
   // NOTE: A reference is returned.
-  *item = it->items[it->index];
+  *item = it->array->items[it->index];
   it->index++;
 
   return 0;
