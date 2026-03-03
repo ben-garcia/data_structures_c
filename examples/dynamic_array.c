@@ -24,7 +24,7 @@ int main(void) {
                                  alignof(long), ZERO_OUT_FALSE);
 
   // populate the 'array_data'
-  for (long i = 0; i < ARRAY_LENGTH - 5; i++) {
+  for (long i = 0; i < ARRAY_LENGTH; i++) {
     array_data[i] = i;
   }
 
@@ -34,10 +34,6 @@ int main(void) {
   for (long i = 0; i < ARRAY_LENGTH; i++) {
     dynamic_array_add(numbers, &array_data[i]);
   }
-
-  // add the remaining items of 'array_data' in one function call
-  // dynamic_array_add_many(numbers, (void**)&array_data[ARRAY_LENGTH - 5], 5);
-  dynamic_array_add_many(numbers, (void **)array_data, 5);
 
   printf("array size after insertions: %d\n", dynamic_array_size(numbers));
   dynamic_array_iterator_create(&iterator, numbers); // create iterator
