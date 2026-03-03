@@ -80,31 +80,6 @@ int dynamic_array_add(dynamic_array *array, const void *item) {
   return 0;
 }
 
-int dynamic_array_add_many(dynamic_array *array, void **items,
-                           unsigned int length) {
-  // array must be defined.
-  if (array == NULL || (*items) == NULL) {
-    return 1;
-  }
-
-  if (array->size == 0) {
-    array->items = arena_alloc(array->arena, array->capacity * array->data_size,
-                               alignof(void *), FALSE);
-  }
-
-  // make sure array has the necessary memory.
-  while (array->capacity < array->size + length) {
-    dynamic_array_resize(&array);
-  }
-
-  memcpy((void *)array->items + array->size * array->data_size, items,
-         array->data_size * length);
-
-  array->size += length;
-
-  return 0;
-}
-
 int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
                                 void **item) {
   // array must be defined.
@@ -146,18 +121,6 @@ int dynamic_array_find(dynamic_array *array, void *data, void **item) {
 
   return 0;
 }
-
-// int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
-//                            void **item) {
-//   // array must be defined.
-//   if (array == NULL || array->size == 0 || index >= array->size) {
-//     return 1;
-//   }
-//
-//   *item = (void *)array->items + index * array->data_size;
-//
-//   return 0;
-// }
 
 int dynamic_array_size(dynamic_array *array) {
   if (array == NULL) {

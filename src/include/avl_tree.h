@@ -57,14 +57,6 @@ int avl_tree_delete(avl_tree *tree, void *data);
 unsigned int avl_tree_size(avl_tree *tree);
 
 /**
- * @brief Deallocate the resources
- *
- * @param tree AVL tree
- * @return 0 on success, 1 otherwise
- */
-int avl_tree_destroy(avl_tree **tree);
-
-/**
  * Allocate necessary resources and setup.
  *
  * Use to iterate through an AVL tree.
@@ -93,13 +85,5 @@ int avl_tree_iterator_next(avl_tree_iterator *it, void **data);
  * @return 0 on success, 1 otherwise
  */
 int avl_tree_iterator_reset(avl_tree_iterator **it);
-
-/**
- * Deallocate and set to NULL.
- *
- * @param it AVL tree iterator to deallocate.
- * @return 0 on success, 1 otherwise
- */
-int avl_tree_iterator_destroy(avl_tree_iterator **it);
 
 #endif // AVL_TREE_H

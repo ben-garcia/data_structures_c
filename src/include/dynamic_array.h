@@ -31,17 +31,6 @@ int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
 int dynamic_array_add(dynamic_array *array, const void *item);
 
 /**
- * @brief Add a multiple elements to the array.
- *
- * @param array dynamic_array to modify.
- * @param items the elements to add.
- * @param length number of elements to add.
- * @return 0 on success, 1 otherwise
- */
-int dynamic_array_add_many(dynamic_array *array, void **items,
-                           unsigned int length);
-
-/**
  * @brief Get the value at a given index.
  *
  * @param array dynamic_array to modify.
@@ -61,17 +50,6 @@ int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
  * @return 0 on success, 1 otherwise
  */
 int dynamic_array_find(dynamic_array *array, void *data, void **item);
-
-/**
- * @brief Get a reference to the element at a given index.
- *
- * @param array dynamic_array to modify.
- * @param index Index to access.
- * @param item Where to store the value.
- * @return 0 on success, 1 otherwise
- */
-// int dynamic_array_find_ref(dynamic_array *array, unsigned int index,
-//                         void **item);
 
 /**
  * @brief Retrive the number of elements in the array.
@@ -107,15 +85,6 @@ int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index);
  * @return 0 on success, 1 otherwise
  */
 int dynamic_array_remove(dynamic_array *array, void *data);
-
-/**
- * @brief Reallocate to only take up the necessary memory to hold the current
- * size.
- *
- * @param array dynamic_array to modify.
- * @return 0 on success, 1 otherwise
- */
-int dynamic_array_shrink_to_fit(dynamic_array *array);
 
 /**
  * @brief Allocate necessary resources and setup.
