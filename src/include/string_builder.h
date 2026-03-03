@@ -41,14 +41,14 @@ int string_builder_append(string_builder *sb, const char *str);
 int string_builder_append_char(string_builder *sb, const char ch);
 
 /**
- * @brief Append a formatted string to the string builder.
+ * @brief Append a printf formatted string to the string builder.
  *
  * @param sb string_builder to modify.
  * @param format formatted string.
  * @param ... variable number of arguments.
  * @return 0 on success, 1 otherwise
  */
-int string_builder_append_fmt_str(string_builder *sb, const char *format, ...);
+int string_builder_append_printf(string_builder *sb, const char *format, ...);
 
 /**
  * @brief Append a string view to the string builder
@@ -75,13 +75,5 @@ int string_builder_build(string_builder *sb, char **buffer);
  * @return 'sb' size, -1 otherwise
  */
 int string_builder_size(const string_builder *sb);
-
-/**
- * @brief Check if string_builder is empty.
- *
- * @param sb string_builder to check.
- * @return 0 on success, 1 otherwise.
- */
-int string_builder_is_empty(string_builder *sb);
 
 #endif // STRING_BUILDER_H
