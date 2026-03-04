@@ -67,8 +67,11 @@ int dynamic_array_add(dynamic_array *array, const void *item) {
 
   // array can't be empty.
   if (array->size == 0) {
-    array->items = arena_alloc(array->arena, array->capacity * array->data_size,
-                               alignof(void *), FALSE);
+    if ((array->items =
+             arena_alloc(array->arena, array->capacity * array->data_size,
+                         alignof(void *), FALSE)) == NULL) {
+      return 1;
+    }
   }
 
   if (array->size == array->capacity) {
@@ -130,7 +133,13 @@ int dynamic_array_size(dynamic_array *array) {
   return array->size;
 }
 
-int dynamic_array_is_empty(dynamic_array *array) { return !(array->size == 0); }
+int dynamic_array_is_empty(dynamic_array *array) {
+  if (array == NULL) {
+    return 1;
+  }
+
+  return !(array->size == 0);
+}
 
 int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
   // array must be defined.
@@ -139,7 +148,7 @@ int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
   }
 
   memcpy(array->items[index], array->items[index + 1],
-         array->data_size * (array->size - index));
+         array->data_size * (array->size - index - 1));
 
   array->size--;
 
@@ -167,7 +176,8 @@ int dynamic_array_remove(dynamic_array *array, void *data) {
   }
 
   memcpy(array->items[index], array->items[index + 1],
-         array->data_size * (array->size - index));
+         array->data_size * (array->size - index - 1));
+
   array->size--;
 
   return 0;
@@ -175,6 +185,10 @@ int dynamic_array_remove(dynamic_array *array, void *data) {
 
 int dynamic_array_iterator_create(dynamic_array_iterator **it,
                                   dynamic_array *array) {
+  if (array == NULL || array->size == 0) {
+    return 1;
+  }
+
   if ((*it = arena_alloc(array->arena, sizeof(dynamic_array_iterator),
                          alignof(dynamic_array_iterator), FALSE)) == NULL) {
     return 1;
