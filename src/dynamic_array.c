@@ -91,8 +91,6 @@ int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
     return 1;
   }
 
-  // FIX: return copy of data of the element
-  // memcpy(*item, array->items[index], array->data_size);
   *item = array->items[index];
 
   return 0;
@@ -119,8 +117,6 @@ int dynamic_array_find(dynamic_array *array, void *data, void **item) {
     return 1;
   }
 
-  // FIX: return copy of data of the element
-  // memcpy(*item, array->items[index], array->data_size);
   *item = array->items[index];
 
   return 0;
@@ -147,7 +143,7 @@ int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
     return 1;
   }
 
-  memcpy(array->items[index], array->items[index + 1],
+  memmove(array->items[index], array->items[index + 1],
          array->data_size * (array->size - index - 1));
 
   array->size--;
@@ -175,7 +171,7 @@ int dynamic_array_remove(dynamic_array *array, void *data) {
     return 1;
   }
 
-  memcpy(array->items[index], array->items[index + 1],
+  memmove(array->items[index], array->items[index + 1],
          array->data_size * (array->size - index - 1));
 
   array->size--;
