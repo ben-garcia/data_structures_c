@@ -66,9 +66,10 @@ struct priority_queue {
 static int priority_queue_resize(priority_queue **pq) {
   unsigned int old_capacity = (*pq)->capacity;
 
-  if (((*pq)->items = arena_realloc(
-           (*pq)->arena, (*pq)->items, old_capacity * sizeof(void *),
-           sizeof(void *) * ((*pq)->capacity <<= 1), FALSE)) == NULL) {
+  if (((*pq)->items = arena_realloc((*pq)->arena, (*pq)->items,
+                                    old_capacity * sizeof(void *),
+                                    sizeof(void *) * ((*pq)->capacity <<= 1),
+                                    alignof(void *), FALSE)) == NULL) {
     return 1;
   }
 

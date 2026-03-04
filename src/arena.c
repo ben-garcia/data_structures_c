@@ -1,7 +1,8 @@
 #include "arena.h"
 #include <string.h>
 
-#define IS_POWER_OF_TWO(n) ((uint64_t)(n) & ((uint64_t)(n) - 1))
+#define IS_NOT_POWER_OF_TWO(n) ((uint64_t)(n) & ((uint64_t)(n) - 1))
+
 /**
  * Aligns 'n' up to the nearest 'p'(power of 2).
  */
@@ -9,17 +10,18 @@
   (((uint64_t)(n) + ((uint64_t)(p) - 1)) & (~((uint64_t)(p) - 1)))
 
 struct arena {
-  uint8_t *base_ptr;       // pointer to the start of the reserved size
-  uint64_t reserved_size;  // max size of the block of memory
-  uint64_t committed_size; // size of physical memory
-  uint64_t offset;         // bump pointer
-  uint64_t scratch_offset; // store the offset for scratch arena
+  uint8_t *base_ptr;        // pointer to the start of the reserved size
+  uint64_t reserved_size;   // max size of the block of memory
+  uint64_t committed_size;  // size of physical memory
+  uint64_t offset;          // bump pointer
+  uint64_t scratch_offset;  // store the offset for scratch arena
+  int scratch_arena_active; //  track whether the scratch arena is active
 };
 
 /**
  * Get the size of a block of virtual memory from the OS.
  */
-static long get_page_size() { return sysconf(_SC_PAGESIZE); }
+static uint32_t get_page_size() { return sysconf(_SC_PAGESIZE); }
 
 int arena_create(arena **a, uint64_t reserve_size) {
   if (((*a) = malloc(sizeof(arena))) == NULL) {
@@ -32,7 +34,7 @@ int arena_create(arena **a, uint64_t reserve_size) {
   // Align to a page boundary
   reserve_size = ALIGN_UP_POW2(reserve_size, page_size);
 
-  // Reserve the Virtual Memory Area but does not alloate phsycial memory.
+  // Reserve the Virtual Memory Area but does not allocate physical memory.
   void *block;
   if ((block = mmap(NULL, reserve_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
                     -1, 0)) == MAP_FAILED) {
@@ -45,23 +47,28 @@ int arena_create(arena **a, uint64_t reserve_size) {
   (*a)->committed_size = 0;
   (*a)->offset = 0;
   (*a)->scratch_offset = 0;
+  (*a)->scratch_arena_active = 0; // false
 
   return 0;
 }
 
 void *arena_alloc(arena *arena, uint64_t size, uint64_t alignment,
                   unsigned int zero_out) {
-  if (arena == NULL || size <= 0 || IS_POWER_OF_TWO(alignment) != 0) {
+  if (arena == NULL || size <= 0 ||
+      (IS_NOT_POWER_OF_TWO(alignment) && alignment != 0)) {
     return NULL;
   }
 
+  const uint64_t actual_alignment = (alignment == 0) ? 1 : alignment;
+  const uint64_t aligned_offset =
+      ALIGN_UP_POW2(arena->offset, actual_alignment);
   const uint32_t page_size = get_page_size();
-  const uint64_t new_offset = arena->offset + size;
+  const uint64_t new_offset = aligned_offset + size;
   if (new_offset > arena->reserved_size) {
     return NULL; // Out of reserved space
   }
 
-  // check Virutal Memory Area has been commited.
+  // check Virtual Memory Area has been commited.
   if (new_offset > arena->committed_size) {
     // Align the required commit size up to nearest page
     uint64_t new_commit_target = ALIGN_UP_POW2(new_offset, page_size);
@@ -71,9 +78,10 @@ void *arena_alloc(arena *arena, uint64_t size, uint64_t alignment,
     }
 
     const uint64_t size_to_commit = new_commit_target - arena->committed_size;
-    void *commit_start_addr = arena->base_ptr + arena->committed_size;
+    void *commit_start_addr =
+        (void *)((uint8_t *)arena->base_ptr + arena->committed_size);
 
-    // Allocate phsycial memory pages(4KB) to the reserved Virtual Memory Area.
+    // Allocate physical memory pages(4KB) to the reserved Virtual Memory Area.
     if (mprotect(commit_start_addr, size_to_commit, PROT_READ | PROT_WRITE) !=
         0) {
       return NULL;
@@ -82,7 +90,7 @@ void *arena_alloc(arena *arena, uint64_t size, uint64_t alignment,
     arena->committed_size = new_commit_target;
   }
 
-  void *memory = arena->base_ptr + arena->offset;
+  void *memory = (void *)((uint8_t *)arena->base_ptr + aligned_offset);
   arena->offset = new_offset;
 
   if (zero_out == 1) {
@@ -93,17 +101,20 @@ void *arena_alloc(arena *arena, uint64_t size, uint64_t alignment,
 }
 
 void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
-                    const uint64_t new_size, unsigned int zero_out) {
-  if ((new_size == 0) || ((arena->offset + new_size) > arena->reserved_size)) {
-    return NULL; // out of space
-  }
-
-  void *memory;
-  if ((memory = arena_alloc(arena, new_size, sizeof(void *), 0)) == NULL) {
+                    const uint64_t new_size, uint64_t alignment,
+                    unsigned int zero_out) {
+  if (arena == NULL || old_ptr == NULL || new_size == 0 ||
+      (IS_NOT_POWER_OF_TWO(alignment) && alignment != 0) ||
+      ((arena->offset + new_size) > arena->reserved_size)) {
     return NULL;
   }
 
-  memcpy(memory, old_ptr, old_size); //
+  void *memory;
+  if ((memory = arena_alloc(arena, new_size, alignment, 0)) == NULL) {
+    return NULL;
+  }
+
+  memcpy(memory, old_ptr, old_size < new_size ? old_size : new_size);
 
   if (zero_out == 1) {
     // zero out memory past old data
@@ -114,21 +125,23 @@ void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
 }
 
 int arena_start_scratch_arena(arena *a) {
-  if (a == NULL || a->committed_size == 0) {
+  if (a == NULL || a->scratch_arena_active != 0) {
     return 1;
   }
 
   a->scratch_offset = a->offset;
+  a->scratch_arena_active = 1;
 
   return 0;
 }
 
 int arena_end_scratch_arena(arena *a) {
-  if (a == NULL || a->scratch_offset == 0) {
+  if (a == NULL || a->scratch_arena_active != 1) {
     return 1;
   }
 
   a->offset = a->scratch_offset;
+  a->scratch_arena_active = 0;
 
   return 0;
 }
@@ -137,8 +150,10 @@ int arena_reset(arena *a) {
   if (a == NULL) {
     return 1;
   }
-
   a->offset = 0;
+  a->scratch_offset = 0;
+  a->scratch_arena_active = 0; // Reset scratch state too
+
   return 0;
 }
 

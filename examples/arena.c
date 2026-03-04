@@ -32,7 +32,7 @@ int main(void) {
   printf("\nreallocating...\n");
 
   array = arena_realloc(arena, array, ARRAY_LENGTH * sizeof(int),
-                        NEW_ARRAY_LENGTH * sizeof(int), 0);
+                        NEW_ARRAY_LENGTH * sizeof(int), alignof(void *), 0);
   for (int i = ARRAY_LENGTH; i < NEW_ARRAY_LENGTH; i++) {
     array[i] = i;
   }

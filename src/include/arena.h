@@ -1,7 +1,8 @@
 /*
  * @file arena.h
 
- * @brief Arena allocator implementation using demand paging.
+ * @brief Arena allocator implementation using virtal memory management
+ *        via demand paging.
  *
  * Reserve a large Virtual Memory Area but commit only what is needed.
  *
@@ -58,7 +59,7 @@ int arena_create(arena **arena, uint64_t reserve_size);
  * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly committed memory.
  */
-void *arena_alloc(arena *arena, uint64_t size, size_t alignment,
+void *arena_alloc(arena *arena, const uint64_t size, const size_t alignment,
                   unsigned int zero_out);
 
 /**
@@ -68,11 +69,13 @@ void *arena_alloc(arena *arena, uint64_t size, size_t alignment,
  * @param old_ptr start of memory chuck to reallocate
  * @param old_size size of the old memory block
  * @param new_size size of the new memory block
+ * @param alignment the alignment boundary.
  * @param zero_out indicates whether to initialize the memory block
  * @return pointer to the start of the newly resized memory block
  */
 void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
-                    const uint64_t new_size, unsigned int zero_out);
+                    const uint64_t new_size, const uint64_t alignment,
+                    unsigned int zero_out);
 
 /**
  * @brief Indicate the next allocations are temporary

@@ -45,9 +45,10 @@ int string_builder_create(string_builder **sb, unsigned int initial_capacity,
 static int string_builder_resize(string_builder **sb) {
   size_t old_capacity = (*sb)->capacity;
 
-  if (((*sb)->string = arena_realloc(
-           (*sb)->arena, (*sb)->string, old_capacity * sizeof(char),
-           sizeof(char) * ((*sb)->capacity <<= 1), FALSE)) == NULL) {
+  if (((*sb)->string = arena_realloc((*sb)->arena, (*sb)->string,
+                                     old_capacity * sizeof(char),
+                                     sizeof(char) * ((*sb)->capacity <<= 1),
+                                     alignof(char), FALSE)) == NULL) {
     return 1;
   }
 
