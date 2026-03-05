@@ -4,11 +4,10 @@
 #include <stdalign.h>
 #include <string.h>
 
-#define TRUE 1
-#define FALSE 0
+#define ZERO_OUT_FALSE 0
 
 struct dynamic_array {
-  void **items;
+  void *items;
   int (*matchfn)(void *, void *); // comparison function
   arena *arena;                   // memory block used for allocations
   unsigned int capacity;          // limit of items before resizing.
@@ -33,7 +32,7 @@ static int dynamic_array_resize(dynamic_array **array) {
   if (((*array)->items = arena_realloc(
            (*array)->arena, (*array)->items, old_capacity * (*array)->data_size,
            (*array)->data_size * ((*array)->capacity <<= 1), alignof(void *),
-           FALSE)) == NULL) {
+           ZERO_OUT_FALSE)) == NULL) {
     return 1;
   }
 
@@ -45,7 +44,7 @@ int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
                          arena *arena) {
 
   if ((*array = arena_alloc(arena, sizeof(dynamic_array),
-                            alignof(dynamic_array), FALSE)) == NULL) {
+                            alignof(dynamic_array), ZERO_OUT_FALSE)) == NULL) {
     return 1;
   }
 
@@ -60,16 +59,14 @@ int dynamic_array_create(dynamic_array **array, unsigned int initial_capacity,
 }
 
 int dynamic_array_add(dynamic_array *array, const void *item) {
-  // array must be defined.
   if (array == NULL || item == NULL) {
     return 1;
   }
 
-  // array can't be empty.
-  if (array->size == 0) {
+  if (array->size == 0) { // array can't be empty.
     if ((array->items =
              arena_alloc(array->arena, array->capacity * array->data_size,
-                         alignof(void *), FALSE)) == NULL) {
+                         alignof(void *), ZERO_OUT_FALSE)) == NULL) {
       return 1;
     }
   }
@@ -78,48 +75,41 @@ int dynamic_array_add(dynamic_array *array, const void *item) {
     dynamic_array_resize(&array);
   }
 
-  array->items[array->size] = (void *)item;
+  memcpy((char *)array->items + (array->size * array->data_size), item,
+         array->data_size);
   array->size++;
 
   return 0;
 }
 
 int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
-                                void **item) {
-  // array must be defined.
-  if (array == NULL || array->size == 0 || index >= array->size) {
+                                void *item) {
+  if (array == NULL || array->size == 0 || index >= array->size ||
+      item == NULL) {
     return 1;
   }
 
-  *item = array->items[index];
+  memcpy(item, (char *)array->items + (index * array->data_size),
+         array->data_size);
 
   return 0;
 }
 
-int dynamic_array_find(dynamic_array *array, void *data, void **item) {
-  // array must be defined.
-  if (array == NULL || array->size == 0 || data == NULL) {
-    *item = NULL;
+int dynamic_array_find(dynamic_array *array, void *data, void *item) {
+  if (array == NULL || array->size == 0 || data == NULL || item == NULL) {
     return 1;
   }
 
-  long int index = -1;
-
   for (unsigned int i = 0; i < array->size; i++) {
-    if (array->matchfn(array->items[i], data) == 0) {
-      index = i;
-      break;
+    if (array->matchfn((char *)array->items + (i * array->data_size), data) ==
+        0) {
+      memcpy(item, (char *)array->items + (i * array->data_size),
+             array->data_size);
+      return 0;
     }
   }
 
-  if (index < 0) {
-    *item = NULL;
-    return 1;
-  }
-
-  *item = array->items[index];
-
-  return 0;
+  return 1;
 }
 
 int dynamic_array_size(dynamic_array *array) {
@@ -138,13 +128,13 @@ int dynamic_array_is_empty(dynamic_array *array) {
 }
 
 int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
-  // array must be defined.
   if (array == NULL || array->size == 0 || index >= array->size) {
     return 1;
   }
 
-  memmove(array->items[index], array->items[index + 1],
-         array->data_size * (array->size - index - 1));
+  memmove((char *)array->items + (index * array->data_size),
+          (char *)array->items + ((index + 1) * array->data_size),
+          array->data_size * (array->size - index - 1));
 
   array->size--;
 
@@ -152,31 +142,23 @@ int dynamic_array_remove_by_index(dynamic_array *array, unsigned int index) {
 }
 
 int dynamic_array_remove(dynamic_array *array, void *data) {
-  // array must be defined.
   if (array == NULL || array->size == 0 || array->matchfn == NULL ||
       data == NULL) {
     return 1;
   }
 
-  long int index = -1;
-
   for (unsigned int i = 0; i < array->size; i++) {
-    if (array->matchfn(array->items[i], data) == 0) {
-      index = i;
-      break;
+    if (array->matchfn((char *)array->items + (i * array->data_size), data) ==
+        0) {
+      memmove((char *)array->items + (i * array->data_size),
+              (char *)array->items + ((i + 1) * array->data_size),
+              array->data_size * (array->size - i - 1));
+      array->size--;
+      return 0;
     }
   }
 
-  if (index < 0) {
-    return 1;
-  }
-
-  memmove(array->items[index], array->items[index + 1],
-         array->data_size * (array->size - index - 1));
-
-  array->size--;
-
-  return 0;
+  return 1;
 }
 
 int dynamic_array_iterator_create(dynamic_array_iterator **it,
@@ -186,7 +168,7 @@ int dynamic_array_iterator_create(dynamic_array_iterator **it,
   }
 
   if ((*it = arena_alloc(array->arena, sizeof(dynamic_array_iterator),
-                         alignof(dynamic_array_iterator), FALSE)) == NULL) {
+                         alignof(dynamic_array_iterator), ZERO_OUT_FALSE)) == NULL) {
     return 1;
   }
 
@@ -196,13 +178,13 @@ int dynamic_array_iterator_create(dynamic_array_iterator **it,
   return 0;
 }
 
-int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item) {
+int dynamic_array_iterator_next(dynamic_array_iterator *it, void *item) {
   if (it->array->size == 0 || it->index >= it->array->size) {
     return 1;
   }
 
-  // NOTE: A reference is returned.
-  *item = it->array->items[it->index];
+  memcpy(item, (char *)it->array->items + (it->index * it->array->data_size),
+         it->array->data_size);
   it->index++;
 
   return 0;

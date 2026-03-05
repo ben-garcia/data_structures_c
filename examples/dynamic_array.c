@@ -14,25 +14,17 @@ int main(void) {
   arena *arena;
   dynamic_array *numbers;
   dynamic_array_iterator *iterator;
-  long *value = NULL;
+  long value = 10;
 
-  arena_create(&arena, KB(4));
+  arena_create(&arena, GB(4));
   dynamic_array_create(&numbers, 32, sizeof(long), matchfn, arena);
 
-  // allocate memory block
-  long *array_data = arena_alloc(arena, sizeof(long) * ARRAY_LENGTH,
-                                 alignof(long), ZERO_OUT_FALSE);
-
-  // populate the 'array_data'
-  for (long i = 0; i < ARRAY_LENGTH; i++) {
-    array_data[i] = i;
-  }
-
-  printf("is array empty? 0(yes), 1(no): %d\n\n", dynamic_array_is_empty(numbers));
+  printf("is array empty? 0(yes), 1(no): %d\n\n",
+         dynamic_array_is_empty(numbers));
 
   // add most of 'array_data' to the array
   for (long i = 0; i < ARRAY_LENGTH; i++) {
-    dynamic_array_add(numbers, &array_data[i]);
+    dynamic_array_add(numbers, &i);
   }
 
   printf("array size after insertions: %d\n", dynamic_array_size(numbers));
@@ -40,17 +32,19 @@ int main(void) {
 
   printf("dynamic array contains: ");
   // iterate through the array
-  while ((dynamic_array_iterator_next(iterator, (void **)&value)) == 0) {
-    printf("%ld ", *value);
+  while ((dynamic_array_iterator_next(iterator, &value)) == 0) {
+    printf("%ld ", value);
   }
 
-  dynamic_array_find_by_index(numbers, 14, (void **)&value);
-  printf("\n\nremoving item at index: %ld\n", *value);
-  dynamic_array_remove_by_index(numbers, *value);
+  dynamic_array_find_by_index(numbers, 14, &value);
+  printf("\n\nremoving item at index: %ld\n", value);
+  dynamic_array_remove_by_index(numbers, value);
 
-  dynamic_array_find(numbers, &array_data[20], (void **)&value);
-  printf("removing data: %ld\n", *value);
-  dynamic_array_remove(numbers, value);
+  long l = 20;
+
+  dynamic_array_find(numbers, &l, &value);
+  printf("removing data: %ld\n", value);
+  dynamic_array_remove(numbers, &value);
 
   printf("\narray size after deletions: %d\n", dynamic_array_size(numbers));
 
@@ -59,7 +53,7 @@ int main(void) {
   printf("dynamic array contains: ");
   // iterate through the array
   while ((dynamic_array_iterator_next(iterator, (void **)&value)) == 0) {
-    printf("%ld ", *value);
+    printf("%ld ", value);
   }
 
   printf("\n");

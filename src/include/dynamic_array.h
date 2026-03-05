@@ -39,7 +39,7 @@ int dynamic_array_add(dynamic_array *array, const void *item);
  * @return 0 on success, 1 otherwise
  */
 int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
-                                void **item);
+                                void *item);
 
 /**
  * @brief Search the array using matchfn
@@ -49,7 +49,7 @@ int dynamic_array_find_by_index(dynamic_array *array, unsigned int index,
  * @param item Where to store the value.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_find(dynamic_array *array, void *data, void **item);
+int dynamic_array_find(dynamic_array *array, void *data, void *item);
 
 /**
  * @brief Retrive the number of elements in the array.
@@ -105,7 +105,7 @@ int dynamic_array_iterator_create(dynamic_array_iterator **it,
  * @param item value used to hold the next elmeent in the array.
  * @return 0 on success, 1 otherwise
  */
-int dynamic_array_iterator_next(dynamic_array_iterator *it, void **item);
+int dynamic_array_iterator_next(dynamic_array_iterator *it, void *item);
 
 /**
  * @brief Reset the dynamic array iterator.
