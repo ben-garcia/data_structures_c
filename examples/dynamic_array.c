@@ -16,7 +16,7 @@ int main(void) {
   dynamic_array_iterator *iterator;
   long value = 10;
 
-  arena_create(&arena, GB(4));
+  arena_create(&arena, KB(4));
   dynamic_array_create(&numbers, 32, sizeof(long), matchfn, arena);
 
   printf("is array empty? 0(yes), 1(no): %d\n\n",

@@ -3,8 +3,7 @@
 #include <stdalign.h>
 #include <string.h>
 
-#define TRUE 1
-#define FALSE 0
+#define ZERO_OUT_FALSE 0
 
 // These functions return the largest integral value that is not greater than n.
 // For example, FLOOR(0.5) is 0.0, and FLOOR(-0.5) is -1.0.
@@ -12,14 +11,14 @@
   ((int)((((n) < 0) && ((n) != ((float)((int)(n))))) ? (((int)(n)) - 1)        \
                                                      : ((int)(n))))
 // Returns the index of i's parent
-#define GET_PARENT_INDEX(i) (int)FLOOR(((float)(i) - 1.0f) / 2.0f)
+#define PARENT_INDEX(i) (int)FLOOR(((float)(i) - 1.0f) / 2.0f)
 // Returns the index of i's left child
-#define GET_LEFT_CHILD_INDEX(i) (2 * (i) + 1)
+#define LEFT_CHILD_INDEX(i) (2 * (i) + 1)
 // Returns the index of i's right child
-#define GET_RIGHT_CHILD_INDEX(i) (2 * (i) + 2)
+#define RIGHT_CHILD_INDEX(i) (2 * (i) + 2)
 
 struct priority_queue {
-  void **items; // array used as max heap
+  void *items;
   /**
    * Comparison function
    *
@@ -52,9 +51,10 @@ struct priority_queue {
    * }
    */
   int (*comparefn)(const void *a, const void *b); // comparison function
-  arena *arena;          // memory block used for allocations
-  unsigned int capacity; // current limit of items
-  unsigned int size;     // elements of items
+  arena *arena;           // memory block used for allocations
+  unsigned int data_size; // number of bytes for each item in the queue
+  unsigned int capacity;  // current limit of items
+  unsigned int size;      // elements of items
 };
 
 /**
@@ -69,7 +69,7 @@ static int priority_queue_resize(priority_queue **pq) {
   if (((*pq)->items = arena_realloc((*pq)->arena, (*pq)->items,
                                     old_capacity * sizeof(void *),
                                     sizeof(void *) * ((*pq)->capacity <<= 1),
-                                    alignof(void *), FALSE)) == NULL) {
+                                    alignof(void *), ZERO_OUT_FALSE)) == NULL) {
     return 1;
   }
 
@@ -86,16 +86,19 @@ static int priority_queue_resize(priority_queue **pq) {
  * @param index the index of the newly added item
  */
 static void heapify_up(priority_queue *pq, unsigned int index) {
-  while (index > 0 &&
-         pq->comparefn(pq->items[index], pq->items[GET_PARENT_INDEX(index)]) >
-             0) { // parent is lesser
-    int parent_index = GET_PARENT_INDEX(index);
+  while (index > 0 && pq->comparefn((char *)pq->items + (index * pq->data_size),
+                                    (char *)pq->items + ((PARENT_INDEX(index) *
+                                                          pq->data_size))) >
+                          0) { // parent is lesser
+    int parent_index = PARENT_INDEX(index);
 
     // swap values
-    void *temp = pq->items[index];
-    pq->items[index] = pq->items[parent_index];
-    pq->items[parent_index] = temp;
-
+    char temp[pq->data_size];
+    memcpy(temp, (char *)pq->items + (index * pq->data_size), pq->data_size);
+    memcpy((char *)pq->items + (index * pq->data_size),
+           (char *)pq->items + (parent_index * pq->data_size), pq->data_size);
+    memcpy((char *)pq->items + (parent_index * pq->data_size), temp,
+           pq->data_size);
     index = parent_index;
   }
 }
@@ -103,7 +106,7 @@ static void heapify_up(priority_queue *pq, unsigned int index) {
 /**
  * @brief Maintains the heap property after deletion.
  *
- * Swaps the newly added item with its left or righg child until
+ * Swaps the newly added item with its left or right child until
  * the heap property is satisfied.
  *
  * @param pq priority queue to check
@@ -111,29 +114,43 @@ static void heapify_up(priority_queue *pq, unsigned int index) {
  */
 static void heapify_down(priority_queue *pq, unsigned int index) {
   while (index < pq->size) {
-    unsigned int left_child_index = GET_LEFT_CHILD_INDEX(index);
-    unsigned int right_child_index = GET_RIGHT_CHILD_INDEX(index);
+    unsigned int left_child_index = LEFT_CHILD_INDEX(index);
+    unsigned int right_child_index = RIGHT_CHILD_INDEX(index);
 
     if ((left_child_index < pq->size) &&
-        (pq->comparefn(pq->items[left_child_index], pq->items[index]) > 0) &&
-        (pq->comparefn(pq->items[left_child_index],
-                       pq->items[right_child_index]) > 0)) {
+        (pq->comparefn((char *)pq->items + (left_child_index * pq->data_size),
+                       (char *)pq->items + (index * pq->data_size)) > 0) &&
+        (pq->comparefn((char *)pq->items + (left_child_index * pq->data_size),
+                       (char *)pq->items +
+                           (right_child_index * pq->data_size)) > 0)) {
       // left child is greater than, so swap with left child
-      void *temp = pq->items[left_child_index];
-      pq->items[left_child_index] = pq->items[index];
-      pq->items[index] = temp;
+      char temp[pq->data_size];
+      memcpy(temp, (char *)pq->items + (left_child_index * pq->data_size),
+             pq->data_size);
+      memcpy((char *)pq->items + (left_child_index * pq->data_size),
+             (char *)pq->items + (index * pq->data_size), pq->data_size);
+      memcpy((char *)pq->items + (index * pq->data_size), temp, pq->data_size);
+
       index = left_child_index;
       continue;
     } else if ((right_child_index < pq->size) &&
-               (pq->comparefn(pq->items[right_child_index], pq->items[index]) >
-                0) &&
-               (pq->comparefn(pq->items[right_child_index],
-                              pq->items[left_child_index]) > 0)) {
+               (pq->comparefn(
+                    (char *)pq->items + (right_child_index * pq->data_size),
+                    (char *)pq->items + (index * pq->data_size)) > 0) &&
+               (pq->comparefn(
+                    (char *)pq->items + (right_child_index * pq->data_size),
+                    (char *)pq->items + (left_child_index * pq->data_size)) >
+                0)) {
       // right child is greater than, so swap with right child
-      void *temp = pq->items[right_child_index];
-      pq->items[right_child_index] = pq->items[index];
-      pq->items[index] = temp;
+      char temp[pq->data_size];
+      memcpy(temp, (char *)pq->items + (right_child_index * pq->data_size),
+             pq->data_size);
+      memcpy((char *)pq->items + (right_child_index * pq->data_size),
+             (char *)pq->items + (index * pq->data_size), pq->data_size);
+      memcpy((char *)pq->items + (index * pq->data_size), temp, pq->data_size);
+
       index = right_child_index;
+
       continue;
     }
 
@@ -142,9 +159,11 @@ static void heapify_down(priority_queue *pq, unsigned int index) {
 }
 
 /**
- * Default comparison function.
+ * @brief Default comparison function.
+ *
+ * @return the greater of 'a' and 'b', 'b' when equal
  */
-static int build_max_heap(const void *a, const void *b) {
+static int choose_greater(const void *a, const void *b) {
   if (*(long *)a == *(long *)b) {
     return 1;
   }
@@ -153,16 +172,18 @@ static int build_max_heap(const void *a, const void *b) {
 }
 
 int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
+                          unsigned int data_size,
                           int (*comparefn)(const void *a, const void *b),
                           arena *arena) {
   if (((*pq) = arena_alloc(arena, sizeof(priority_queue),
-                           alignof(priority_queue), FALSE)) == NULL) {
+                           alignof(priority_queue), ZERO_OUT_FALSE)) == NULL) {
     return 1;
   }
 
   (*pq)->capacity = ROUND_POW2(initial_capacity);
   (*pq)->arena = arena;
-  (*pq)->comparefn = comparefn == NULL ? build_max_heap : comparefn;
+  (*pq)->comparefn = comparefn == NULL ? choose_greater : comparefn;
+  (*pq)->data_size = data_size;
   (*pq)->size = 0;
 
   if ((((*pq)->items) = arena_alloc(arena, (*pq)->capacity * sizeof(void *),
@@ -174,7 +195,7 @@ int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
 }
 
 int priority_queue_insert(priority_queue *pq, void *data) {
-  if (pq == NULL) { // must be defined
+  if (pq == NULL || data == NULL) { // must be defined
     return 1;
   }
 
@@ -184,19 +205,20 @@ int priority_queue_insert(priority_queue *pq, void *data) {
     }
   }
 
-  pq->items[pq->size] = data;
+  memcpy((char *)pq->items + (pq->size * pq->data_size), data, pq->data_size);
   heapify_up(pq, pq->size);
   pq->size++;
 
   return 0;
 }
 
-int priority_queue_peek(priority_queue *pq, void **data) {
-  if (pq == NULL || pq->size == 0) {
+int priority_queue_peek(priority_queue *pq, void *data) {
+  if (pq == NULL || pq->size == 0 || data == NULL) {
     return 1;
   }
 
-  *data = pq->items[0];
+  // *data = pq->items[0];
+  memcpy(data, pq->items, pq->data_size);
   return 0;
 }
 
@@ -205,7 +227,9 @@ int priority_queue_delete(priority_queue *pq) {
     return 1;
   }
 
-  pq->items[0] = pq->items[pq->size - 1]; // last element is new root
+  // pq->items[0] = pq->items[pq->size - 1]; // last element is new root
+  memcpy(pq->items, (char *)pq->items + ((pq->size - 1) * pq->data_size),
+         pq->data_size);
 
   pq->size--;
   heapify_down(pq, 0);

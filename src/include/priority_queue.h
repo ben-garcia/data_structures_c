@@ -10,6 +10,7 @@ typedef struct priority_queue priority_queue;
  *
  * @param pq priority queue to initialize
  * @param initial_capacity total number of items before resizing
+ * @param data_size bytes of each value stored.
  * @param comparefn comparison function
  *        MUST return 0 if a == b,
  *             negative number if a < b
@@ -18,6 +19,7 @@ typedef struct priority_queue priority_queue;
  * @return 0 on success, 1 otherwise
  */
 int priority_queue_create(priority_queue **pq, unsigned int initial_capacity,
+                          unsigned int data_size,
                           int (*comparefn)(const void *a, const void *b),
                           arena *arena);
 /**
@@ -36,7 +38,7 @@ int priority_queue_insert(priority_queue *pq, void *data);
  * @param data buffer to store root data
  * @return 0 on success, 1 otherwise
  */
-int priority_queue_peek(priority_queue *pq, void **data);
+int priority_queue_peek(priority_queue *pq, void *data);
 
 /**
  * @brief Delete the root node data

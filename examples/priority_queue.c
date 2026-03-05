@@ -58,13 +58,13 @@ int main(void) {
       {"foobaz", 1.9f, 7}, {"bar3", 4.0f, 8}, {"foobar", 1.1f, 9}};
   priority_queue *min_pqueue;
 
-  priority_queue_create(&min_pqueue, 16, student_comparefn, arena);
+  priority_queue_create(&min_pqueue, 16, sizeof(student), student_comparefn,
+                        arena);
 
   printf("min priority queue size: %d\n\n", priority_queue_size(min_pqueue));
 
   for (int i = 0; i < ARRAY_SIZE(min_pqueue_data); i++) {
-    printf("inserting {name: %s, gpa: %.2f, id: %d}\n",
-    min_pqueue_data[i].name,
+    printf("inserting {name: %s, gpa: %.2f, id: %d}\n", min_pqueue_data[i].name,
            min_pqueue_data[i].gpa, min_pqueue_data[i].id);
     priority_queue_insert(min_pqueue, &min_pqueue_data[i]);
   }
@@ -72,10 +72,10 @@ int main(void) {
   printf("\nmin priority queue size: %d\n\n", priority_queue_size(min_pqueue));
 
   while (priority_queue_is_empty(min_pqueue) != 0) {
-    student *data;
-    priority_queue_peek(min_pqueue, (void **)&data);
-    printf("deleting {name: %s, gpa: %.2f, id: %d}\n", data->name, data->gpa,
-           data->id);
+    student data = {0};
+    priority_queue_peek(min_pqueue, &data);
+    printf("deleting {name: %s, gpa: %.2f, id: %d}\n", data.name, data.gpa,
+           data.id);
     priority_queue_delete(min_pqueue);
   }
 
@@ -85,15 +85,12 @@ int main(void) {
   long max_pqueue_data[] = {9, 8, 2, 3, 4, 5, 6, 7, 5};
   priority_queue *max_pqueue;
 
-  priority_queue_create(&max_pqueue, 16, NULL, arena);
+  priority_queue_create(&max_pqueue, 16, sizeof(long), NULL, arena);
 
   printf("inserting... ");
-  for (int i = 0; i < ARRAY_SIZE(min_pqueue_data); i++) {
+  for (int i = 0; i < ARRAY_SIZE(max_pqueue_data); i++) {
     printf("%ld ", max_pqueue_data[i]);
-    long *long_ptr =
-        arena_alloc(arena, sizeof(long), alignof(long), 0);
-    *long_ptr = max_pqueue_data[i];
-    priority_queue_insert(max_pqueue, long_ptr);
+    priority_queue_insert(max_pqueue, (void*)&max_pqueue_data[i]);
   }
 
   printf("\n\nmax priority queue size: %d\n", priority_queue_size(max_pqueue));
@@ -101,14 +98,14 @@ int main(void) {
   printf("\ndeleting... ");
 
   while (priority_queue_is_empty(max_pqueue) != 0) {
-    long *data;
-    priority_queue_peek(max_pqueue, (void **)&data);
-    printf(" %ld", *data);
+    long data;
+    priority_queue_peek(max_pqueue, (void *)&data);
+    printf(" %ld", data);
     priority_queue_delete(max_pqueue);
   }
 
   printf("\n\nmax priority queue size: %d\n", priority_queue_size(max_pqueue));
-  
+
   // de-allocate
   arena_destroy(&arena);
 
