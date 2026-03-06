@@ -21,7 +21,14 @@ struct arena {
 /**
  * Get the size of a block of virtual memory from the OS.
  */
-static uint32_t get_page_size() { return sysconf(_SC_PAGESIZE); }
+static long int get_page_size() {
+ long int result;
+  if ((result = sysconf(_SC_PAGESIZE)) == -1) {
+    return -1;
+  }
+
+  return result;
+}
 
 int arena_create(arena **a, uint64_t reserve_size) {
   if (((*a) = malloc(sizeof(arena))) == NULL) {
@@ -32,7 +39,9 @@ int arena_create(arena **a, uint64_t reserve_size) {
 
   /// Align reservation up to the nearest page size
   // Align to a page boundary
-  reserve_size = ALIGN_UP_POW2(reserve_size, page_size);
+  if ((reserve_size = ALIGN_UP_POW2(reserve_size, page_size)) <= 0) {
+    return 1;
+  }
 
   // Reserve the Virtual Memory Area but does not allocate physical memory.
   void *block;
@@ -104,8 +113,7 @@ void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
                     const uint64_t new_size, uint64_t alignment,
                     unsigned int zero_out) {
   if (arena == NULL || old_ptr == NULL || new_size == 0 ||
-      (IS_NOT_POWER_OF_TWO(alignment) && alignment != 0) ||
-      ((arena->offset + new_size) > arena->reserved_size)) {
+      (IS_NOT_POWER_OF_TWO(alignment) && alignment != 0)) {
     return NULL;
   }
 
@@ -118,7 +126,7 @@ void *arena_realloc(arena *arena, void *old_ptr, const uint64_t old_size,
 
   if (zero_out == 1) {
     // zero out memory past old data
-    memset(memory + old_size, 0, new_size - old_size);
+    memset((char*)memory + old_size, 0, new_size - old_size);
   }
 
   return memory;

@@ -6,7 +6,6 @@
 #include <string.h>
 
 #define HASH_TABLE_LOAD_FACTOR 0.75
-#define TRUE 1
 #define FALSE 0
 
 struct hash_table_entry {
@@ -18,14 +17,14 @@ struct hash_table {
   hash_table_entry *entries;                          // array of entries
   unsigned int (*hashfn)(const char *, unsigned int); // used for hash code
   arena *arena;          // memory block for allocations
-  unsigned size;         // number of entries
+  unsigned int size;         // number of entries
   unsigned int capacity; // number of buckets
 };
 
 struct hash_table_iterator {
   hash_table_entry *entries;
-  unsigned size;
-  unsigned capacity;
+  unsigned int size;
+  unsigned int capacity;
   unsigned int index; // current index
 };
 
